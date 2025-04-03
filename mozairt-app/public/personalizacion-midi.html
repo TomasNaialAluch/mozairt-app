@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Personalización del Archivo MIDI</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --black-olive: #3f3f37;
+      --engineering-orange: #c03221;
+      --ash-gray: #dfe6e4;
+      --orange-peel: #ffc982;
+      --french-violet: #9662e4;
+    }
+
+    body {
+      background-color: var(--ash-gray);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--black-olive);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .navbar {
+      background-color: var(--black-olive);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .btn-primary {
+      background-color: var(--french-violet);
+      border-color: var(--french-violet);
+      border-radius: 2rem;
+      padding: 0.5rem 2rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      background-color: #5a1fb2;
+      border-color: #5a1fb2;
+      transform: scale(1.05);
+    }
+
+    .btn-outline-primary {
+      color: var(--french-violet);
+      border-color: var(--french-violet);
+      border-radius: 2rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-outline-primary:hover,
+    .btn-outline-primary.active {
+      background-color: var(--french-violet);
+      color: white;
+      transform: scale(1.05);
+    }
+
+    header, section {
+      padding-top: 2rem;
+      padding-bottom: 2rem;
+    }
+
+    .fade-in {
+      opacity: 0;
+      animation: fadeInAnimation 1.5s ease forwards;
+    }
+
+    @keyframes fadeInAnimation {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    footer {
+      background-color: var(--black-olive);
+      color: #fff;
+      text-align: center;
+      padding: 1rem;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+
+    .content-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      margin-bottom: 8rem; /* Espacio para el input y el footer */
+    }
+
+    .input-container {
+      display: flex;
+      gap: 0.5rem;
+      padding: 1rem;
+      background-color: var(--ash-gray);
+      position: fixed;
+      bottom: 4rem; /* Encima del footer */
+      width: 100%;
+      justify-content: center;
+      box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+    }
+
+    .input-container input {
+      width: 80%;
+      max-width: 400px;
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--black-olive);
+      border-radius: 2rem;
+    }
+
+    .input-container button {
+      padding: 0.5rem 1.5rem;
+      background-color: var(--french-violet);
+      color: white;
+      border: none;
+      border-radius: 2rem;
+      cursor: pointer;
+    }
+
+    .message {
+      margin-bottom: 1rem;
+      padding: 1rem;
+      border-radius: 1rem;
+      background-color: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark">
+  <div class="container-fluid">
+    <!-- Restauramos el enlace al header -->
+    <a class="navbar-brand mb-0 h1" href="index.html">MozAIrt</a>
+  </div>
+</nav>
+
+<div class="content-container" id="content-container">
+  <!-- Header dentro del contenedor -->
+  <header class="text-center fade-in">
+    <h1>Personaliza tu archivo MIDI</h1>
+  </header>
+
+  <!-- Contenido dinámico -->
+  <section id="personalizacion-midi" class="container fade-in">
+    <h2 class="text-center mb-5">Elige los elementos musicales para tu archivo MIDI</h2>
+
+    <div class="row justify-content-center mb-5">
+      <div class="col-md-8 text-center">
+        <input type="file" class="form-control" id="midi-file" />
+        <button class="btn btn-outline-primary mt-3" onclick="handleMidiUpload()">Cargar archivo MIDI</button>
+      </div>
+    </div>
+
+    <div class="row justify-content-center g-4">
+      <div class="col-md-3">
+        <div class="option-group">
+          <h5>Bajos y Ritmos</h5>
+          <button class="btn btn-outline-primary" id="bassline-btn">Bajo (Bassline)</button>
+          <button class="btn btn-outline-primary" id="percussion-btn">Percusión</button>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="option-group">
+          <h5>Armonías</h5>
+          <button class="btn btn-outline-primary" id="chords-btn">Acordes (Chords)</button>
+          <button class="btn btn-outline-primary" id="arpeggio-btn">Arpegios</button>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="option-group">
+          <h5>Melodías y Texturas</h5>
+          <button class="btn btn-outline-primary" id="leads-btn">Leads</button>
+          <button class="btn btn-outline-primary" id="pads-btn">Pads</button>
+          <button class="btn btn-outline-primary" id="stabs-btn">Stabs</button>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="option-group">
+          <h5>Sintetizadores</h5>
+          <button class="btn btn-outline-primary" id="synths-btn">Synths</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="row justify-content-center mt-5">
+      <div class="col-md-4 text-center">
+        <button class="btn btn-primary btn-lg">Generar MIDI</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="input-container">
+  <input type="text" id="user-input" placeholder="Escribe aquí..." />
+  <button onclick="sendMessage()">Enviar</button>
+</div>
+
+<footer>
+  <p>&copy; 2025 MozAIrt · Música clásica con inteligencia artificial</p>
+</footer>
+
+<script>
+  const contentContainer = document.getElementById("content-container");
+  const userInput = document.getElementById("user-input");
+
+  // Función para agregar un mensaje al contenido
+  function addMessage(text, sender = "mozart") {
+    const messageDiv = document.createElement("div");
+    messageDiv.classList.add("message");
+
+    if (sender === "mozart") {
+      messageDiv.innerHTML = `<strong>MozAIrt:</strong> ${text}`;
+    } else {
+      messageDiv.innerHTML = `<strong>Tú:</strong> ${text}`;
+    }
+
+    contentContainer.appendChild(messageDiv);
+
+    // Scroll automático al final del contenido
+    setTimeout(() => {
+      contentContainer.scrollTop = contentContainer.scrollHeight;
+    }, 50);
+  }
+
+  // Función para manejar el envío de mensajes del usuario
+  function sendMessage() {
+    const userText = userInput.value.trim();
+    if (!userText) return;
+
+    // Agregar mensaje del usuario
+    addMessage(userText, "user");
+
+    // Limpiar el input
+    userInput.value = "";
+
+    // Respuesta simulada de MozAIrt
+    setTimeout(() => {
+      let response = "Entiendo... ¿Qué más necesitas?";
+      if (userText.toLowerCase().includes("midi")) {
+        response = `Por favor, selecciona un archivo MIDI.<br><br>
+          <input type="file" class="form-control" id="midi-file" style="margin: 0 auto;" />
+          <button class="btn btn-outline-primary mt-3" onclick="handleMidiUpload()">Cargar archivo MIDI</button>`;
+      } else if (userText.toLowerCase().includes("opciones")) {
+        response = `Aquí tienes algunas opciones para personalizar tu archivo MIDI:<br><br>
+          <strong>Bajos y Ritmos:</strong><br>
+          <button class="btn btn-outline-primary">Bajo (Bassline)</button>
+          <button class="btn btn-outline-primary">Percusión</button><br><br>
+          <strong>Armonías:</strong><br>
+          <button class="btn btn-outline-primary">Acordes (Chords)</button>
+          <button class="btn btn-outline-primary">Arpegios</button><br><br>
+          <strong>Melodías y Texturas:</strong><br>
+          <button class="btn btn-outline-primary">Leads</button>
+          <button class="btn btn-outline-primary">Pads</button>
+          <button class="btn btn-outline-primary">Stabs</button><br><br>
+          <strong>Sintetizadores:</strong><br>
+          <button class="btn btn-outline-primary">Synths</button>`;
+      }
+      addMessage(response, "mozart");
+    }, 500);
+  }
+
+  // Manejar el envío de mensajes al presionar Enter
+  userInput.addEventListener("keypress", function (event) {
+    if (event.key === "Enter") {
+      event.preventDefault(); // Evitar el salto de línea
+      sendMessage();
+    }
+  });
+
+  // Función para cargar un archivo MIDI
+  function handleMidiUpload() {
+    const fileInput = document.getElementById("midi-file");
+    if (fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      const feedbackMessage = `
+        <strong>Archivo MIDI:</strong> ${file.name}<br>
+        <strong>Tamaño:</strong> ${(file.size / 1024).toFixed(2)} KB<br>
+        Este archivo MIDI ha sido interpretado correctamente.`;
+      addMessage(feedbackMessage, "mozart");
+    } else {
+      addMessage("Por favor, selecciona un archivo MIDI.", "mozart");
+    }
+  }
+
+  document.querySelectorAll('.btn-outline-primary').forEach(button => {
+    button.addEventListener('click', function() {
+      document.querySelectorAll('.btn-outline-primary').forEach(btn => btn.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

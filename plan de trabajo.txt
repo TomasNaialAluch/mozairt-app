@@ -1,0 +1,85 @@
+Perfecto. Acá tenés un **plan de trabajo detallado**, dividido por días. El proyecto completo se puede tener funcional en **7 días hábiles**, trabajando unas 4-6 hs por día:
+
+---
+
+## 🧠 **MozAIrt — Plan de trabajo detallado (7 días)**
+
+### 📍**Día 1: Setup + Estructura Base**
+**Objetivos:**
+- Configurar el entorno (proyecto web, carpetas, dependencias).
+- Instalar Magenta.js, Tone.js y Bootstrap.
+- Estructurar los archivos: `index.html`, `referencias`, `personalización`, `chat`.
+
+**Duración estimada:** 4 hs  
+**Entregable:** Proyecto funcional con diseño visible (ya lo tenés hecho ✅).
+
+---
+
+### 📍**Día 2: Generación de MIDI con IA**
+**Objetivos:**
+- Implementar lógica para generar melodías y acordes simples con Magenta.js.
+- Generar archivo MIDI real desde parámetros seleccionados.
+- Habilitar botón de descarga.
+
+**Duración estimada:** 5-6 hs  
+**Entregable:** Usuario elige elementos → se genera y descarga un `.mid`.
+
+---
+
+### 📍**Día 3: Subida y modificación de MIDI**
+**Objetivos:**
+- Permitir cargar un archivo MIDI.
+- Leerlo y visualizar información básica (número de tracks, duración).
+- Preparar lógica para modificarlo (agregar capas).
+
+**Duración estimada:** 6 hs  
+**Entregable:** Usuario sube un MIDI y puede editarlo.
+
+---
+
+### 📍**Día 4: Integración con Spotify**
+**Objetivos:**
+- Configurar autenticación con API de Spotify.
+- Permitir buscar canciones y playlists.
+- Obtener atributos: tempo, tonalidad, energía, etc.
+
+**Duración estimada:** 6 hs  
+**Entregable:** Referencias de Spotify integradas con el flujo de creación.
+
+---
+
+### 📍**Día 5: Personalización avanzada + IA musical**
+**Objetivos:**
+- Usar datos de Spotify para generar el MIDI con características similares.
+- Mapear la tonalidad y BPM de la referencia en lo generado.
+- Probar IA para sugerir estructuras (verso, drop, etc.).
+
+**Duración estimada:** 6 hs  
+**Entregable:** Archivos MIDI generados reflejan la esencia de la referencia.
+
+---
+
+### 📍**Día 6: Chat real con OpenAI**
+**Objetivos:**
+- Armar backend Node.js simple que conecte con OpenAI.
+- Conectar el frontend: envío y respuesta por fetch.
+- Incluir preguntas musicales y control de parámetros del MIDI.
+
+**Duración estimada:** 6-7 hs  
+**Entregable:** Chat MozAIrt con IA real y respuestas útiles para crear música.
+
+---
+
+### 📍**Día 7: Pulido final + testing**
+**Objetivos:**
+- Test de flujo completo.
+- Mejoras UX/UI.
+- Validación de errores, responsive, accesibilidad básica.
+
+**Duración estimada:** 4 hs  
+**Entregable:** App lista para mostrar, testear o publicar.
+
+---
+
+### 🧮 **Tiempo total estimado: 35-40 horas (7 días)**  
+¿Querés que arranquemos hoy con el Día 2 y te paso el código para generar el MIDI?

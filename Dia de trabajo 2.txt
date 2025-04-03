@@ -1,0 +1,99 @@
+Perfecto Naial, vamos a trabajar con la opción **Vercel (con backend incluido)**.  
+Acá tenés el **plan actualizado** por días, contemplando **frontend + backend + integración real con OpenAI y Spotify**:
+
+---
+
+## ✅ **MozAIrt – Plan de trabajo completo con Vercel (7 días)**
+
+---
+
+### 📍**DÍA 1 – Setup del proyecto (VS Code + Vercel)**
+**Objetivos:**
+- Estructurar carpetas: `/public`, `/pages`, `/api`, `/components`
+- Instalar Magenta.js, Tone.js, Bootstrap
+- Crear proyecto en GitHub y vincular a Vercel
+- Subir el sitio inicial y ver online en `mozairt.vercel.app`
+
+**Duración:** 4 hs  
+🟢 **Entregable:** Front cargado, diseño funcionando online
+
+---
+
+### 📍**DÍA 2 – Generación de MIDI con Magenta**
+**Objetivos:**
+- Crear generador de MIDI (por elementos: acordes, bajos, etc.)
+- Implementar `Magenta.js` + `Tone.js`
+- Botón para escuchar y descargar `.mid`
+
+**Duración:** 6 hs  
+🟢 **Entregable:** Generador funcional + botón de descarga
+
+---
+
+### 📍**DÍA 3 – Subida y modificación de MIDI**
+**Objetivos:**
+- Permitir cargar un archivo `.mid` propio
+- Leer contenido y mostrar info básica (tracks, duración, key)
+- Activar opciones de modificación
+
+**Duración:** 6 hs  
+🟢 **Entregable:** Subís un MIDI y lo podés modificar
+
+---
+
+### 📍**DÍA 4 – Conexión con API de Spotify**
+**Objetivos:**
+- Conectar backend (`/api/spotify`) con OAuth2
+- Buscar canciones, playlists
+- Obtener audio features: BPM, tonalidad, energía, etc.
+
+**Duración:** 6 hs  
+🟢 **Entregable:** Referencias musicales con info real de Spotify
+
+---
+
+### 📍**DÍA 5 – OpenAI como copiloto musical**
+**Objetivos:**
+- Crear endpoint backend `/api/openai`
+- Enviar prompts musicales (tipo: "hacé un bajo melódico con groove")
+- OpenAI responde con parámetros musicales
+- Usar esa respuesta para guiar a Magenta
+
+**Duración:** 6 hs  
+🟢 **Entregable:** Chat que entiende arte y genera MIDI con IA real
+
+---
+
+### 📍**DÍA 6 – Chat conversacional con IA**
+**Objetivos:**
+- Crear interfaz de chat en frontend
+- Enviar mensajes a `/api/openai`
+- Mostrar respuestas de IA como MozAIrt
+- Incluir preguntas guiadas, feedback y sugerencias
+
+**Duración:** 6 hs  
+🟢 **Entregable:** MozAIrt habla con vos y te ayuda a crear
+
+---
+
+### 📍**DÍA 7 – Testing, pulido y despliegue final**
+**Objetivos:**
+- Testeo completo
+- Optimización de UX/UI
+- Validación de errores, mobile, performance
+- Dejar el proyecto en producción con Vercel
+
+**Duración:** 4 hs  
+🟢 **Entregable:** MozAIrt online, completo, funcional y elegante
+
+---
+
+### 🧮 **Tiempo total estimado: 38-40 hs**
+✔️ Incluye backend  
+✔️ Frontend desplegado  
+✔️ Spotify + OpenAI funcionando  
+✔️ MIDI real y usable
+
+---
+
+¿Querés que empecemos ya con el Día 1 y te digo cómo crear el proyecto y conectar con Vercel?

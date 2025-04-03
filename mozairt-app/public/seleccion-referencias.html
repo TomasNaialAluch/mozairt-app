@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Selección de Referencias Musicales</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --black-olive: #3f3f37;
+      --engineering-orange: #c03221;
+      --ash-gray: #dfe6e4;
+      --orange-peel: #ffc982;
+      --french-violet: #9662e4;
+    }
+
+    body {
+      background-color: var(--ash-gray);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--black-olive);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .navbar {
+      background-color: var(--black-olive);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .btn-primary {
+      background-color: var(--french-violet);
+      border-color: var(--french-violet);
+      border-radius: 2rem;
+      padding: 0.5rem 2rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      background-color: #5a1fb2;
+      border-color: #5a1fb2;
+      transform: scale(1.05);
+    }
+
+    .btn-outline-primary {
+      color: var(--french-violet);
+      border-color: var(--french-violet);
+      border-radius: 2rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-outline-primary:hover,
+    .btn-outline-primary.active {
+      background-color: var(--french-violet);
+      color: white;
+      transform: scale(1.05);
+    }
+
+    /* Estilo para botones de género seleccionados */
+    .genre-btn.active {
+      background-color: var(--french-violet);
+      color: white;
+      box-shadow: 0 0 0 0.2rem rgba(150, 98, 228, 0.5);
+    }
+
+    header, section {
+      padding-top: 2rem;
+      padding-bottom: 2rem;
+    }
+
+    .fade-in {
+      opacity: 0;
+      animation: fadeInAnimation 1.5s ease forwards;
+    }
+
+    @keyframes fadeInAnimation {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    footer {
+      background-color: var(--black-olive);
+      color: #fff;
+      text-align: center;
+      padding: 1rem;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+
+    .content-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      margin-bottom: 8rem; /* Espacio para el input y el footer */
+    }
+
+    .input-container {
+      display: flex;
+      gap: 0.5rem;
+      padding: 1rem;
+      background-color: var(--ash-gray);
+      position: fixed;
+      bottom: 4rem; /* Encima del footer */
+      width: 100%;
+      justify-content: center;
+      box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+    }
+
+    .input-container input {
+      width: 80%;
+      max-width: 400px;
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--black-olive);
+      border-radius: 2rem;
+    }
+
+    .input-container button {
+      padding: 0.5rem 1.5rem;
+      background-color: var(--french-violet);
+      color: white;
+      border: none;
+      border-radius: 2rem;
+      cursor: pointer;
+    }
+
+    .message {
+      margin-bottom: 1rem;
+      padding: 1rem;
+      border-radius: 1rem;
+      background-color: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand mb-0 h1" href="index.html">MozAirt</a>
+  </div>
+</nav>
+
+<div class="content-container" id="content-container">
+  <!-- Header dentro del contenedor -->
+  <header class="text-center fade-in">
+    <h1>Seleccioná referencias musicales</h1>
+  </header>
+
+  <!-- Contenido dinámico -->
+  <section id="seleccion-referencias" class="container fade-in">
+    <h2 class="text-center mb-5">Elegí tus referencias musicales</h2>
+
+    <div class="row justify-content-center mb-5">
+      <div class="col-md-8 text-center">
+        <input type="text" class="form-control form-control-lg text-center mb-3" placeholder="Buscá canciones o playlists en Spotify" id="spotify-search">
+        <button class="btn btn-outline-primary" onclick="handleSpotifySearch()">Buscar en Spotify</button>
+      </div>
+    </div>
+
+    <div class="row justify-content-center g-3">
+      <h5 class="text-center mb-4">O elegí rápidamente por género:</h5>
+      <div class="d-flex flex-wrap justify-content-center gap-2" id="generos">
+        <button class="btn btn-outline-primary genre-btn" data-genre="Melodic House & Techno">Melodic House & Techno</button>
+        <button class="btn btn-outline-primary genre-btn" data-genre="Afro House">Afro House</button>
+        <button class="btn btn-outline-primary genre-btn" data-genre="Tech House">Tech House</button>
+        <button class="btn btn-outline-primary genre-btn" data-genre="House">House</button>
+        <button class="btn btn-outline-primary genre-btn" data-genre="Deep House">Deep House</button>
+        <button class="btn btn-outline-primary genre-btn" data-genre="Progressive House">Progressive House</button>
+        <button class="btn btn-outline-primary genre-btn" data-genre="Minimal / Deep Tech">Minimal / Deep Tech</button>
+        <button class="btn btn-outline-primary genre-btn" data-genre="Techno (Peak Time / Driving)">Techno (Peak Time / Driving)</button>
+        <button class="btn btn-outline-primary genre-btn" data-genre="Techno (Raw / Deep / Hypnotic)">Techno (Raw / Deep / Hypnotic)</button>
+        <button class="btn btn-outline-primary genre-btn" data-genre="Hard Techno">Hard Techno</button>
+        <button class="btn btn-outline-primary genre-btn" data-genre="Trance">Trance</button>
+        <button class="btn btn-outline-primary genre-btn" data-genre="Psy-Trance">Psy-Trance</button>
+        <button class="btn btn-outline-primary genre-btn" data-genre="Drum & Bass">Drum & Bass</button>
+        <button class="btn btn-outline-primary genre-btn" data-genre="Dubstep">Dubstep</button>
+        <button class="btn btn-outline-primary genre-btn" data-genre="Trap / Future Bass">Trap / Future Bass</button>
+        <button class="btn btn-outline-primary genre-btn" data-genre="Electronica">Electronica</button>
+        <button class="btn btn-outline-primary genre-btn" data-genre="Indie Dance">Indie Dance</button>
+        <button class="btn btn-outline-primary genre-btn" data-genre="Nu Disco / Disco">Nu Disco / Disco</button>
+        <button class="btn btn-outline-primary genre-btn" data-genre="Breaks / Breakbeat / UK Bass">Breaks / Breakbeat / UK Bass</button>
+        <button class="btn btn-outline-primary genre-btn" data-genre="140 / Deep Dubstep / Grime">140 / Deep Dubstep / Grime</button>
+      </div>
+    </div>
+
+    <div class="row justify-content-center mt-5">
+      <div class="col-md-4 text-center">
+        <button class="btn btn-primary btn-lg">Continuar</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="input-container">
+  <input type="text" id="user-input" placeholder="Escribe aquí..." />
+  <button onclick="sendMessage()">Enviar</button>
+</div>
+
+<footer>
+  <p>&copy; 2025 MozAirt · Música clásica con inteligencia artificial</p>
+</footer>
+
+<script>
+  const contentContainer = document.getElementById("content-container");
+  const userInput = document.getElementById("user-input");
+
+  // Función para agregar un mensaje al contenido
+  function addMessage(text, sender = "mozart") {
+    const messageDiv = document.createElement("div");
+    messageDiv.classList.add("message");
+
+    if (sender === "mozart") {
+      messageDiv.innerHTML = `<strong>MozAirt:</strong> ${text}`;
+    } else {
+      messageDiv.innerHTML = `<strong>Tú:</strong> ${text}`;
+    }
+
+    contentContainer.appendChild(messageDiv);
+
+    // Scroll automático al final del contenido
+    setTimeout(() => {
+      contentContainer.scrollTop = contentContainer.scrollHeight;
+    }, 50);
+  }
+
+  // Función para manejar el envío de mensajes del usuario
+  function sendMessage() {
+    const userText = userInput.value.trim();
+    if (!userText) return;
+
+    // Agregar mensaje del usuario
+    addMessage(userText, "user");
+
+    // Limpiar el input
+    userInput.value = "";
+
+    // Respuesta simulada de MozAirt
+    setTimeout(() => {
+      let response = "Entiendo... ¿Qué más necesitas?";
+      if (userText.toLowerCase().includes("spotify")) {
+        response = `Por favor, selecciona una referencia musical.<br><br>
+          <input type="text" class="form-control" id="spotify-search" placeholder="Buscá canciones o playlists en Spotify" />
+          <button class="btn btn-outline-primary mt-3" onclick="handleSpotifySearch()">Buscar en Spotify</button>`;
+      } else if (userText.toLowerCase().includes("opciones")) {
+        response = `Aquí tienes algunas opciones para elegir:<br><br>
+          <strong>Géneros:</strong><br>
+          <button class="btn btn-outline-primary">Melodic House & Techno</button>
+          <button class="btn btn-outline-primary">Afro House</button><br><br>
+          <strong>Otras opciones:</strong><br>
+          <button class="btn btn-outline-primary">Search en Spotify</button>`;
+      }
+      addMessage(response, "mozart");
+    }, 500);
+  }
+
+  // Manejar el envío de mensajes al presionar Enter
+  userInput.addEventListener("keypress", function (event) {
+    if (event.key === "Enter") {
+      event.preventDefault(); // Evitar el salto de línea
+      sendMessage();
+    }
+  });
+
+  // Manejar selección de géneros
+  document.querySelectorAll('#generos .genre-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      // Remover la clase 'active' de todos los botones de género
+      document.querySelectorAll('#generos .genre-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // Agregar la clase 'active' solo al botón clickeado
+      this.classList.add('active');
+      
+      const genre = this.getAttribute("data-genre");
+
+      // Agregar mensaje del usuario
+      addMessage(`Género seleccionado: ${genre}`, "user");
+
+      // Respuesta simulada de MozAirt
+      setTimeout(() => {
+        const response = `
+          <strong>Género seleccionado:</strong> ${genre}<br>
+          Este género será utilizado como referencia para generar tu archivo MIDI.`;
+        addMessage(response, "mozart");
+      }, 500);
+    });
+  });
+
+  // Manejar búsqueda de Spotify
+  function handleSpotifySearch() {
+    const searchInput = document.getElementById("spotify-search");
+    const searchText = searchInput.value.trim();
+
+    if (!searchText) {
+      alert("Por favor, ingresa una referencia en el buscador.");
+      return;
+    }
+
+    // Agregar mensaje del usuario
+    addMessage(searchText, "user");
+
+    // Respuesta simulada de MozAirt
+    setTimeout(() => {
+      const response = `
+        <strong>Referencia seleccionada:</strong> ${searchText}<br>
+        Esta referencia será utilizada para generar tu archivo MIDI.`;
+      addMessage(response, "mozart");
+    }, 500);
+  }
+</script>
+
+</body>
+</html>
