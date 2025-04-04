@@ -1,0 +1,78 @@
+Perfecto, Naial. Acá tenés un documento que podés usar para organizarte vos solo y después mostrarle a un inversor, basado en lo que ya tenés hecho, las herramientas que definiste, los documentos cargados y el plan técnico viable:
+
+---
+
+# 🧠 MozAIrt – Versión MVP para Desarrollar Solo con IA
+
+## 🎯 Objetivo
+
+Construir una app usable por productores de música electrónica que:
+1. Permita generar y modificar archivos MIDI con ayuda de inteligencia artificial.
+2. Use presets estilísticos para adaptar melodías según referencias musicales reales.
+3. Pueda ser desarrollada inicialmente solo por una persona (vos), con ayuda de la IA.
+
+---
+
+## 🧱 Infraestructura Base
+
+**Stack definido (documentado en `README.md` y `package.json`)**:
+
+| Elemento        | Tecnología elegida          |
+|-----------------|-----------------------------|
+| Frontend        | HTML + JS + Bootstrap       |
+| Backend         | Node.js con Vercel Functions|
+| MIDI Engine     | Magenta.js + Tone.js        |
+| Presets         | JSON + MIDI local           |
+| Almacenamiento  | Local/Vercel Blob (escalable a S3) |
+| IA              | OpenAI API (GPT-4)          |
+| Referencias     | Spotify API                 |
+
+---
+
+## 🧩 Funcionalidades ya diseñadas
+
+Según tu documentación (`documentacion_presets_json_mozairt.docx`, `prototipos_json_elementos_mozairt.docx`):
+
+- Uso de presets organizados por género/artista con tags.
+- Personalización de elementos (Lead, Chords, Bassline, Pads, Perc).
+- Generación desde cero o modificación de MIDI subido.
+- Capacidad para leer un `.mid`, analizarlo y sugerir mejoras por IA.
+
+---
+
+## 📆 Plan en 7 días (autosuficiente con ayuda IA)
+
+Referencias: `Dia de trabajo 2.txt`, `plan de trabajo.txt`
+
+| Día | Tarea                                                          |
+|-----|----------------------------------------------------------------|
+| 1   | Estructura base en Vercel + conexión GitHub                   |
+| 2   | Generador MIDI básico con Magenta.js                          |
+| 3   | Subida de MIDI + lectura de info (tracks, BPM, etc.)          |
+| 4   | Integrar Spotify API y obtener atributos musicales             |
+| 5   | Generar presets automáticos desde referencias (prompt + IA)   |
+| 6   | Chat con OpenAI para modificar MIDI según estilo               |
+| 7   | Testing, UX/UI final, deploy con versión pública               |
+
+---
+
+## 🔁 Flujo de funcionamiento (simplificado)
+
+1. Usuario sube un `.mid` o elige generar desde cero.
+2. Se analiza el MIDI (BPM, key) con Magenta o pretty_midi.
+3. Elige un preset estilístico (por artista o género).
+4. Chat IA sugiere mejoras → usuario acepta o modifica.
+5. Se genera un nuevo `.mid` y se descarga.
+
+---
+
+## ❓Preguntas para vos (y la IA) al avanzar
+
+- ¿Querés mantener el flujo simple o incluir también generación por audio?
+- ¿Los presets los vas a crear manualmente o vas a armar un script con ChatGPT?
+- ¿Querés primero subir la versión básica (solo generación MIDI) y luego escalar?
+- ¿Preferís guardar todo en Vercel Blob o migrar después a AWS S3?
+
+---
+
+¿Querés que te arme este mismo documento en PDF o como presentación para inversores?

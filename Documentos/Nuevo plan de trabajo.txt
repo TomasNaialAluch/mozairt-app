@@ -1,0 +1,67 @@
+Basándome en la información proporcionada en los archivos, aquí tienes un **plan de trabajo actualizado** que integra las nuevas funcionalidades y herramientas investigadas. Este plan amplía el proyecto a **14 días hábiles** (aproximadamente 70-80 horas de trabajo), manteniendo un enfoque MVP pero con capacidades más avanzadas:
+
+---
+
+## 🧠 **MozAIrt — Plan de trabajo detallado (14 días)**  
+**Objetivo final:** MVP con generación/modificación de MIDI, integración de APIs de análisis musical, IA generativa (texto y música), y almacenamiento en la nube.  
+
+---
+
+### 📍 **Fase 1: Setup y Core MIDI (Días 1-4)**  
+**Objetivo:** Base funcional para generación y edición de MIDI.  
+
+| **Día** | **Tareas** | **Tecnologías/APIs** | **Entregable** |  
+|---------|------------|-----------------------|----------------|  
+| **1**   | - Configurar entorno (Vercel, GitHub). <br> - Estructura frontend (Bootstrap) + Magenta.js/Tone.js. <br> - Diseño básico de UI (generador, editor, chat). | HTML/JS, Magenta.js, Bootstrap | Proyecto desplegado con interfaz básica. |  
+| **2**   | - Implementar generación de melodías/acordes con Magenta.js. <br> - Botón de descarga MIDI. | Magenta.js (MusicVAE, MelodyRNN) | Usuario genera y descarga MIDI desde cero. |  
+| **3**   | - Subida de archivos MIDI. <br> - Lectura de metadata (BPM, notas, tracks) con PrettyMIDI/Music21. | PrettyMIDI (Python backend) o Magenta.NoteSequences | Usuario sube MIDI y ve análisis básico. |  
+| **4**   | - Funcionalidad de edición: transposición, capas, filtros. <br> - Guardado temporal en localStorage. | Tone.js, Magenta.Quantize | Usuario modifica MIDI y guarda cambios. |  
+
+---
+
+### 📍 **Fase 2: Integración de APIs Externas (Días 5-8)**  
+**Objetivo:** Conectar servicios para análisis y referencia musical.  
+
+| **Día** | **Tareas** | **Tecnologías/APIs** | **Entregable** |  
+|---------|------------|-----------------------|----------------|  
+| **5**   | - Integrar Spotify API: autenticación OAuth. <br> - Buscar tracks/playlists y extraer audio features (BPM, key). | Spotify Web API | Usuario elige referencia de Spotify y ve sus atributos. |  
+| **6**   | - Opcional: Extracción de audio desde URLs (YouTube/SoundCloud) con yt-dlp. <br> - Análisis de BPM/tonalidad con Librosa/Essentia. | yt-dlp + Librosa (Python backend) | Usuario sube URL y recibe análisis musical. |  
+| **7**   | - Generar MIDI basado en atributos de referencia (ej: mismo BPM que track de Spotify). <br> - Mapeo de estilos (EDM, Pop, etc.) a parámetros MIDI. | Magenta.js + Spotify API | MIDI generado con características similares a la referencia. |  
+| **8**   | - Configurar almacenamiento en la nube (Vercel Blob o AWS S3). <br> - Guardar/recuperar MIDIs del usuario. | Vercel Blob / AWS S3 SDK | MIDIs guardados con URLs de descarga persistente. |  
+
+---
+
+### 📍 **Fase 3: IA Avanzada y Chat (Días 9-12)**  
+**Objetivo:** Implementar IA para sugerencias y asistencia creativa.  
+
+| **Día** | **Tareas** | **Tecnologías/APIs** | **Entregable** |  
+|---------|------------|-----------------------|----------------|  
+| **9**   | - Backend Node.js para OpenAI API. <br> - Prompt engineering para sugerencias musicales (ej: "Haz esto más complejo"). | OpenAI GPT-4 | API funcional que recibe prompts y devuelve texto/JSON. |  
+| **10**  | - Chat frontend: enviar consultas y mostrar respuestas. <br> - Ejecutar cambios en el MIDI basados en sugerencias (ej: "Añade arpegios"). | Fetch API, Magenta.js | Usuario interactúa con IA para ajustar el MIDI. |  
+| **11**  | - Integrar AIVA o HuggingFace para generación estilística. <br> - Opcional: Usar Mistral 7B (local/OpenRouter) como alternativa gratuita. | AIVA API / HuggingFace | MIDI generado con estilos predefinidos (ej: "Como Daft Punk"). |  
+| **12**  | - Sistema de presets JSON: guardar configuraciones de estilos. <br> - Cargar presets desde IA (ej: "Crea un preset para Techno"). | JSON, OpenAI API | Biblioteca de presets descargables. |  
+
+---
+
+### 📍 **Fase 4: Testing y Deploy (Días 13-14)**  
+**Objetivo:** Pulir y asegurar calidad antes de lanzamiento.  
+
+| **Día** | **Tareas** | **Tecnologías/APIs** | **Entregable** |  
+|---------|------------|-----------------------|----------------|  
+| **13**  | - Testeo integral: flujo MIDI, APIs, almacenamiento. <br> - Validación de errores (ej: MIDI corruptos, límites de APIs). | Jest (backend), Manual | Reporte de bugs y correcciones. |  
+| **14**  | - Optimización UI/UX (responsive, accesibilidad). <br> - Deploy público en Vercel/Netlify. | Vercel/Netlify | MVP listo para demostración o inversores. |  
+
+---
+
+### 🧮 **Tiempo total estimado: 70-80 horas (14 días)**  
+**Priorización:**  
+1. **Core MIDI + Spotify** (Días 1-8): Funcionalidad básica imprescindible.  
+2. **IA + Almacenamiento** (Días 9-12): Valor agregado con modelos generativos.  
+3. **Opcionales avanzados**: Análisis de audio desde URLs (Día 6) y AIVA (Día 11) pueden posponerse si hay limitaciones de tiempo.  
+
+**Recomendaciones:**  
+- Usar **Vercel Blob** para almacenamiento inicial (simple y gratuito).  
+- Empezar con **OpenAI GPT-4** para el chat (mejor calidad) y luego probar Mistral 7B si hay restricciones de costo.  
+- Documentar todo en el `README.md` (setup, APIs usadas, límites).  
+
+¿Necesitas ajustar algún área o profundizar en algún día específico?
