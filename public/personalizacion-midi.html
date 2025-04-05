@@ -327,72 +327,80 @@
     addMessage("Por favor, seleccioná un archivo MIDI.", "mozart");
     return;
   }
-
+  
   const file = fileInput.files[0];
 
-  // ✅ Validar tipo de archivo
+  // Validar extensión del archivo
+  if (!/\.(mid|midi)$/i.test(file.name)) {
+    addMessage("❌ Solo se aceptan archivos con extensión .MID o .MIDI", "mozart");
+    return;
+  }
+
+  // Validar tipo MIME
   const allowedTypes = ['audio/midi', 'audio/x-midi', 'audio/mid'];
   if (!allowedTypes.some(type => file.type.includes(type))) {
-    addMessage("❌ Solo se aceptan archivos .MID", "mozart");
+    addMessage("❌ Formato de archivo no válido.", "mozart");
     return;
   }
 
   const loader = document.getElementById("loader");
 
-  const reader = new FileReader();
-  reader.onload = async function (e) {
-    loader.style.display = "block"; // ⏳ Mostrar spinner
+  try {
+    loader.style.display = "block";
+    const reader = new FileReader();
 
-    const midiData = new Uint8Array(e.target.result);
-    const midi = mm.midiToSequenceProto(midiData);
+    reader.onload = async function (e) {
+      try {
+        const midiData = new Uint8Array(e.target.result);
+        const midi = mm.midiToSequenceProto(midiData);
 
-    // ⚠️ Verificar cantidad de tracks
-    const numTracks = midi.tracks?.length || 1;
-    if (numTracks > 1) {
-      addMessage(`
-        ⚠️ Tu archivo MIDI tiene <strong>${numTracks} pistas (tracks)</strong>.<br><br>
-        🎧 <strong>Consejo profesional:</strong> En producción musical, lo ideal es trabajar con <strong>un solo track por archivo</strong>.<br><br>
-        Esto evita conflictos de compatibilidad entre DAWs y facilita la edición, mezcla y exportación de ideas.<br><br>
-        <em>Te recomendamos exportar tus partes por separado (melodía, bajo, acordes...) en archivos individuales.</em><br><br>
-        Más adelante, MozAIrt te va a ayudar a separar y entender cada pista usando IA 🤖.
-      `, "mozart");
-    }
+        // Verificar cantidad de pistas
+        const numTracks = midi.tracks?.length || 1;
+        if (numTracks > 1) {
+          addMessage(`⚠️ Tu archivo MIDI tiene ${numTracks} pistas. Se recomienda trabajar con una sola pista para evitar problemas de compatibilidad.`, "mozart");
+        }
 
-    const quantized = mm.sequences.quantizeNoteSequence(midi, 4);
+        // Procesar el archivo MIDI (cuantización, extracción de metadata, etc.)
+        const quantized = mm.sequences.quantizeNoteSequence(midi, 4);
+        const bpm = quantized.tempos?.[0]?.qpm || "Desconocido";
+        const key = quantized.keySignatures?.[0]?.key || "Sin info";
+        const totalNotes = quantized.notes.length;
+        addMessage(`
+          <strong>🎵 Información del MIDI:</strong><br>
+          BPM: ${bpm}<br>
+          Tonalidad: ${key}<br>
+          Notas totales: ${totalNotes}
+        `, "mozart");
 
-    // Mostrar metadata
-    const bpm = quantized.tempos?.[0]?.qpm || "Desconocido";
-    const key = quantized.keySignatures?.[0]?.key || "Sin info";
-    const totalNotes = quantized.notes.length;
-    addMessage(`
-      <strong>🎵 Información del MIDI:</strong><br>
-      BPM: ${bpm}<br>
-      Tonalidad: ${key}<br>
-      Notas totales: ${totalNotes}
-    `, "mozart");
+        // Generar continuación musical
+        try {
+          const continuation = await musicRNN.continueSequence(quantized, 32, 1.2);
+          const combined = mm.sequences.concatenate([quantized, continuation]);
+          const newMidi = mm.sequenceProtoToMidi(combined);
+          const blob = new Blob([newMidi], { type: 'audio/midi' });
+          const url = URL.createObjectURL(blob);
+          const downloadLink = `<a href="${url}" download="mozairt_output.mid" class="btn btn-outline-primary mt-3">Descargar MIDI generado</a>`;
+          addMessage("MIDI generado con una capa adicional.<br>" + downloadLink, "mozart");
+        } catch (genError) {
+          addMessage("⚠️ Error al generar el MIDI. Probá con otro archivo.", "mozart");
+          console.error("Error en generación:", genError);
+        }
+      } catch (procError) {
+        addMessage("⚠️ Error al procesar el archivo MIDI.", "mozart");
+        console.error("Error en procesamiento:", procError);
+      } finally {
+        loader.style.display = "none";
+      }
+    };
 
-    addMessage(`Archivo cargado: ${file.name}<br>Elemento seleccionado: ${selectedElement.type}`, "mozart");
-
-    try {
-      const continuation = await musicRNN.continueSequence(quantized, 32, 1.2);
-      const combined = mm.sequences.concatenate([quantized, continuation]);
-      const newMidi = mm.sequenceProtoToMidi(combined);
-      const blob = new Blob([newMidi], { type: 'audio/midi' });
-      const url = URL.createObjectURL(blob);
-
-      const downloadLink = `<a href="${url}" download="mozairt_output.mid" class="btn btn-outline-primary mt-3">Descargar MIDI generado</a>`;
-      addMessage("MIDI generado con una capa adicional.<br>" + downloadLink, "mozart");
-
-    } catch (err) {
-      addMessage("⚠️ Error al generar el MIDI. Probá con otro archivo.", "mozart");
-      console.error(err);
-    } finally {
-      loader.style.display = "none"; // ✅ Ocultar spinner
-    }
-  };
-
-  reader.readAsArrayBuffer(file);
+    reader.readAsArrayBuffer(file);
+  } catch (error) {
+    addMessage("⚠️ Ocurrió un error inesperado.", "mozart");
+    console.error("Error inesperado:", error);
+    loader.style.display = "none";
+  }
 }
+
 
  
  

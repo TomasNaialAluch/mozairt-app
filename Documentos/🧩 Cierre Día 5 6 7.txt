@@ -1,0 +1,125 @@
+
+🧩 CIERRE DÍA 5, 6 Y 7 – MOZAIrt
+
+📅 Fecha: 05/04/2025
+
+---
+
+## 🧠 Contexto general
+
+Este documento resume los avances técnicos de los días 5, 6 y 7 del desarrollo del proyecto **MozAIrt**, enfocado en la selección de referencias musicales y generación de archivos MIDI con ayuda de IA (Magenta.js), integración con Spotify y mensajes enriquecidos al usuario. 
+
+Está pensado tanto como documento de cierre, como guía para comprender el estado del código en este punto. Útil para desarrolladores, testers o una IA en caso de debugging futuro.
+
+---
+
+## ✅ Día 5 – Botonera de Géneros
+
+- Se creó el sistema de botones para elegir géneros musicales.
+- Cada botón tiene una clase `.genre-btn` y al hacer clic:
+  - Se le aplica `.active`.
+  - Se guarda el género en `selectedGenre.value`.
+  - Se llama a `showSmartMessage("genero", selectedGenre.value)` para mostrar un mensaje contextual.
+- Se implementó `selectedGenre` como objeto global:  
+  ```js
+  const selectedGenre = { value: null };
+  ```
+- Esta lógica está en el `<script>` del HTML `seleccion-referencias.html`.
+
+---
+
+## ✅ Día 6 – Sistema de Mensajes Enriquecidos
+
+- Se reemplazó la función antigua `addMessage()` por `showSmartMessage(type, data)`.
+- Se creó un objeto `messageTemplates` con plantillas de mensaje según tipo:
+  - `genero`
+  - `track`
+  - `info`
+  - `error`
+
+- Los mensajes se insertan en el `#content-container` con animaciones y, si corresponde, botones con `onclick` definidos.
+- Ejemplo de uso:
+  ```js
+  showSmartMessage("track", {
+    id: track.id,
+    name: track.name,
+    artists: track.artists.map(a => a.name).join(", ")
+  });
+  ```
+
+- Esta estructura mejora la escalabilidad del sistema de mensajes y centraliza su diseño.
+
+---
+
+## ✅ Día 7 – Integración real con Spotify + Refactor general
+
+### 🔐 Autenticación con Spotify:
+- Uso de OAuth 2.0 con `access_token` extraído desde la URL.
+- Si el token falta o expira, se lanza `authenticateSpotify()`.
+
+### 🔎 Búsqueda real:
+- Se agregó input para buscar canciones.
+- Se usa `fetch` contra `https://api.spotify.com/v1/search`.
+- Los resultados se renderizan como tarjetas con imagen, nombre, artistas y botón para seleccionar.
+
+### 🧠 Al seleccionar track:
+- Se guarda en `appState.selectedTrack`.
+- Se llama a `showSmartMessage("track", Ellipsis)` para mostrar opciones:
+  - Generar MIDI
+  - Analizar estructura (futuro)
+
+### 🎶 Generación MIDI:
+- Al tocar “Generar demo”, se llama `generarMIDIDesdeGenero()`:
+  - Usa Magenta.js (`MusicRNN`)
+  - Crea una secuencia vacía, la cuantiza y genera 64 steps.
+  - El archivo se descarga automáticamente.
+
+- El MIDI generado incluye nombre dinámico y puede venir desde:
+  - Género seleccionado.
+  - Track real de Spotify.
+
+### 🧪 Validaciones:
+- Si no hay token de Spotify, se lanza la autenticación.
+- Si no se selecciona género o track, se avisa al usuario.
+
+---
+
+## 🧩 Archivos clave modificados
+
+- `public/seleccion-referencias.html`: lógica principal de UI, selección, mensajes, Spotify, generación MIDI.
+- `public/personalizacion-midi.html`: se ajustó parcialmente.
+- README.md reemplazado por una versión completa.
+- Archivos `To-do Tecnica.txt` y `Llamado de atención día 3 4 5.txt` fueron eliminados.
+- Se creó carpeta `Documentos/Mejoras/` y se organizó allí toda la documentación.
+
+---
+
+## 🔁 Commit y Push
+
+Todo fue versionado y subido en el commit:
+```
+"Avance Día 7 - Integración Spotify real, mensajes enriquecidos y mejoras UI"
+```
+
+---
+
+## 🧠 Nota para IA (debug futuro)
+
+Este punto del proyecto representa la **primera integración real** con Spotify y generación MIDI funcional.  
+Si algo falla con Spotify, verificar:
+- `accessToken` en `getSpotifyTokenFromURL()`
+- Headers en `fetch`
+- Selector de input `#spotify-search`
+
+Si algo falla con mensajes:
+- Revisar `showSmartMessage()`
+- Revisa las plantillas en `messageTemplates`
+
+Si la generación de MIDI falla:
+- Verificar inicialización de `musicRNN`
+- Asegurarse de que `selectedGenre.value` o `selectedTrack` estén definidos.
+
+Este archivo resume la arquitectura funcional del punto más estable hasta el momento.
+
+---
+

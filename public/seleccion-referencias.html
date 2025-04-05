@@ -431,7 +431,6 @@ function selectTrack(track) {
   }
   async function buscarEnSpotify() {
   const query = document.getElementById("spotify-search").value;
-
   if (!accessToken) {
     authenticateSpotify();
     return;
@@ -443,7 +442,17 @@ function selectTrack(track) {
         Authorization: `Bearer ${accessToken}`
       }
     });
+
+    // Verificar si la respuesta es exitosa
+    if (!res.ok) {
+      throw new Error(`Error en la respuesta: ${res.status}`);
+    }
+
     const data = await res.json();
+    if (!data.tracks || !data.tracks.items || data.tracks.items.length === 0) {
+      showSmartMessage("error", "No se encontraron resultados para la búsqueda.");
+      return;
+    }
 
     let html = `<h5 class="mt-3">Resultados para: "${query}"</h5><div class="row">`;
     data.tracks.items.forEach(track => {
@@ -460,15 +469,14 @@ function selectTrack(track) {
         </div>`;
     });
     html += '</div>';
-
     document.getElementById("spotify-results").innerHTML = html;
 
   } catch (err) {
-    console.error("Error al buscar:", err);
+    console.error("Error al buscar en Spotify:", err);
     showSmartMessage("error", "Error al buscar en Spotify. Probá más tarde.");
-
   }
 }
+
 
 function showUserMessage(text) {
   const messageDiv = document.createElement("div");
