@@ -1,0 +1,95 @@
+Perfecto, Naial. Acá tenés el nuevo documento de planificación unificado para los **Días 6, 7, 8, 9 y 10**, combinando:
+
+- El documento original que me diste
+- Las observaciones de múltiples AIs
+- El to-do técnico previo
+- Las mejoras nuevas del último análisis
+
+---
+
+## 🌟 Documento de Mejora y Planificación: Días 6, 7, 8, 9 y 10 (MozAIrt)
+
+Este documento sintetiza los avances y mejoras clave a implementar, con foco en robustez técnica, experiencia del usuario e integración con IA y APIs reales.
+
+---
+
+### ✅ Estado previo (completado hasta Día 5)
+- Subida de `.mid` y validación básica
+- Generación de capa extra con Magenta
+- Detección de múltiples pistas con explicación educativa
+- Descarga del archivo `.mid` mejorado
+- Selección de género con presets y generación desde cero
+- Estructura visual clara, responsive y accesible
+- Inicio de simulación de chat
+- Preparación para token OAuth2 de Spotify
+
+---
+
+## 🔄 Días 6 a 10 — Plan de implementación
+
+---
+
+### 🎧 Día 6: Búsqueda real con Spotify
+
+- ✅ Autenticación con Spotify (token OAuth2)
+- ✅ Buscar canciones reales con la API de Spotify
+- ✅ Mostrar resultados con portada, artista, botón
+- ✅ Marcar referencias seleccionadas
+- ✅ Detectar token expirado y mostrar modal de autenticación
+- ✅ Preparar prompts para futura conexión con IA
+- ✅ Validar entrada vacía
+
+---
+
+### 🧠 Día 7: Chat enriquecido y mensajes IA
+
+- [ ] Crear estructura de chat real con IA (reemplazar simulación)
+- [ ] Mostrar respuestas con botones interactivos: “Generar demo”, “Editar parámetros”
+- [ ] Incluir plantilla de respuesta por género o track
+- [ ] Manejar errores al generar MIDI y mostrar mensajes detallados
+- [ ] Mostrar loader/spinner central durante generación
+- [ ] Modularizar funciones principales (generación, carga, visualización)
+
+---
+
+### 🔊 Día 8: Previews, análisis y visualización
+
+- [ ] Vista previa de audio en resultados de Spotify (si tiene `preview_url`)
+- [ ] Agregar botón “Analizar estructura” por canción seleccionada
+- [ ] Mostrar BPM estimado y detalles del track
+- [ ] Visualizar archivo MIDI generado con `mm.Visualizer`
+- [ ] Reproductor de audio para archivos `.mid` (requiere workaround con conversión)
+
+---
+
+### 🛠️ Día 9: Refactor visual y autenticación
+
+- [ ] Implementar modal de autenticación personalizado para Spotify
+- [ ] Guardar token en `localStorage` y revocar al expirar
+- [ ] Mostrar mensajes tipo `alert` contextuales reutilizables (`showMessage`)
+- [ ] Separar lógica de Spotify y Magenta en módulos JS
+
+---
+
+### ♿ Día 10: UX y accesibilidad
+
+- [ ] Agregar scroll suave en el contenedor de mensajes
+- [ ] Incluir `aria-label` en botones interactivos
+- [ ] Usar etiqueta `<main>` en lugar de `div#content-container`
+- [ ] Soporte para navegación por teclado
+- [ ] Tooltips explicativos en botones clave
+- [ ] Validar tamaño, tipo y extensión del `.mid` antes de procesar
+
+---
+
+## 🧠 IA y futuro
+
+- [ ] ChatGPT explica amablemente por qué conviene usar un solo track
+- [ ] ChatGPT analiza el `.mid` y propone mejoras (por estilo, intención)
+- [ ] Permitir separar pistas de `.mid` complejos
+- [ ] Usar los datos del track de Spotify como input para el prompt a IA
+- [ ] Presets por estilo: bpm, temperatura, instrumentos, densidad
+
+---
+
+¿Querés que lo copie dentro del proyecto como archivo `.md` o `.txt` para que quede fijo en la carpeta raíz?

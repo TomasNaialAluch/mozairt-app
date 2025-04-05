@@ -131,6 +131,20 @@
   display: block;
   width: 100%;
 }
+.loader {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--french-violet);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin: 2rem auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 
   </style>
 </head>
@@ -144,6 +158,8 @@
 </nav>
 
 <div class="content-container" id="content-container">
+  <div id="loader" class="loader" style="display: none;"></div>
+
   <!-- Header dentro del contenedor -->
   <header class="text-center fade-in">
     <h1>Personaliza tu archivo MIDI</h1>
@@ -305,67 +321,60 @@
 
   const musicRNN = new mm.MusicRNN('https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/basic_rnn');
   musicRNN.initialize();
-
   async function handleMidiUpload() {
-    if (fileInput.files.length === 0) {
-      addMessage("Por favor, selecciona un archivo MIDI.", "mozart");
-      return;
+  const fileInput = document.getElementById("midi-file");
+  if (fileInput.files.length === 0) {
+    addMessage("Por favor, seleccioná un archivo MIDI.", "mozart");
+    return;
+  }
+
+  const file = fileInput.files[0];
+
+  // ✅ Validar tipo de archivo
+  const allowedTypes = ['audio/midi', 'audio/x-midi', 'audio/mid'];
+  if (!allowedTypes.some(type => file.type.includes(type))) {
+    addMessage("❌ Solo se aceptan archivos .MID", "mozart");
+    return;
+  }
+
+  const loader = document.getElementById("loader");
+
+  const reader = new FileReader();
+  reader.onload = async function (e) {
+    loader.style.display = "block"; // ⏳ Mostrar spinner
+
+    const midiData = new Uint8Array(e.target.result);
+    const midi = mm.midiToSequenceProto(midiData);
+
+    // ⚠️ Verificar cantidad de tracks
+    const numTracks = midi.tracks?.length || 1;
+    if (numTracks > 1) {
+      addMessage(`
+        ⚠️ Tu archivo MIDI tiene <strong>${numTracks} pistas (tracks)</strong>.<br><br>
+        🎧 <strong>Consejo profesional:</strong> En producción musical, lo ideal es trabajar con <strong>un solo track por archivo</strong>.<br><br>
+        Esto evita conflictos de compatibilidad entre DAWs y facilita la edición, mezcla y exportación de ideas.<br><br>
+        <em>Te recomendamos exportar tus partes por separado (melodía, bajo, acordes...) en archivos individuales.</em><br><br>
+        Más adelante, MozAIrt te va a ayudar a separar y entender cada pista usando IA 🤖.
+      `, "mozart");
     }
 
-    if (!selectedElement.type) {
-      addMessage("Selecciona qué querés agregar al MIDI (bajo, acordes, etc.).", "mozart");
-      return;
-    }
+    const quantized = mm.sequences.quantizeNoteSequence(midi, 4);
 
-    const file = fileInput.files[0];
-    const reader = new FileReader();
+    // Mostrar metadata
+    const bpm = quantized.tempos?.[0]?.qpm || "Desconocido";
+    const key = quantized.keySignatures?.[0]?.key || "Sin info";
+    const totalNotes = quantized.notes.length;
+    addMessage(`
+      <strong>🎵 Información del MIDI:</strong><br>
+      BPM: ${bpm}<br>
+      Tonalidad: ${key}<br>
+      Notas totales: ${totalNotes}
+    `, "mozart");
 
-    reader.onload = async function (e) {
-      const midiData = new Uint8Array(e.target.result);
-      const midi = mm.midiToSequenceProto(midiData);
-      // ⚠️ Verificar cantidad de tracks
-const numTracks = midi.tracks?.length || 1;
+    addMessage(`Archivo cargado: ${file.name}<br>Elemento seleccionado: ${selectedElement.type}`, "mozart");
 
-if (numTracks > 1) {
-  addMessage(`
-    ⚠️ Tu archivo MIDI tiene <strong>${numTracks} pistas (tracks)</strong>.<br><br>
-    🎧 <strong>Consejo profesional:</strong> En producción musical, lo ideal es trabajar con <strong>un solo track por archivo</strong>.<br><br>
-    Esto evita conflictos de compatibilidad entre DAWs y facilita la edición, mezcla y exportación de ideas.<br><br>
-    <em>Te recomendamos exportar tus partes por separado (melodía, bajo, acordes...) en archivos individuales.</em><br><br>
-    Más adelante, MozAIrt te va a ayudar a separar y entender cada pista usando IA 🤖.
-  `, "mozart");
-}
-
-
-      const quantized = mm.sequences.quantizeNoteSequence(midi, 4);
-      // Extraer info del archivo MIDI
-const bpm = quantized.tempos?.[0]?.qpm || "Desconocido";
-const key = quantized.keySignatures?.[0]?.key || "Sin info";
-const totalNotes = quantized.notes.length;
-
-// Mostrar info al usuario
-addMessage(`
-  <strong>🎵 Información del MIDI:</strong><br>
-  BPM: ${bpm}<br>
-  Tonalidad: ${key}<br>
-  Notas totales: ${totalNotes}
-`, "mozart");
-
-
-      addMessage(`Archivo cargado: ${file.name}<br>Elemento seleccionado: ${selectedElement.type}`, "mozart");
-
-      // 🔁 Futura integración con IA
-      // const instruction = await fetch('/api/openai', { method: 'POST', body: JSON.stringify({ tipo: selectedElement.type, secuencia: midi }) })
-
-      let continuation;
-
-      try {
-        continuation = await musicRNN.continueSequence(quantized, 32, 1.2);
-      } catch (err) {
-        addMessage("Error al generar el MIDI. Probá con otro archivo.", "mozart");
-        return;
-      }
-
+    try {
+      const continuation = await musicRNN.continueSequence(quantized, 32, 1.2);
       const combined = mm.sequences.concatenate([quantized, continuation]);
       const newMidi = mm.sequenceProtoToMidi(combined);
       const blob = new Blob([newMidi], { type: 'audio/midi' });
@@ -373,10 +382,21 @@ addMessage(`
 
       const downloadLink = `<a href="${url}" download="mozairt_output.mid" class="btn btn-outline-primary mt-3">Descargar MIDI generado</a>`;
       addMessage("MIDI generado con una capa adicional.<br>" + downloadLink, "mozart");
-    };
 
-    reader.readAsArrayBuffer(file);
-  }
+    } catch (err) {
+      addMessage("⚠️ Error al generar el MIDI. Probá con otro archivo.", "mozart");
+      console.error(err);
+    } finally {
+      loader.style.display = "none"; // ✅ Ocultar spinner
+    }
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+ 
+ 
+
 </script>
 // Genera un archivo MIDI desde cero usando Magenta, basado en el género elegido por el usuario
 async function generarMIDIDesdeGenero() {
@@ -410,6 +430,7 @@ async function generarMIDIDesdeGenero() {
     console.error("Error al generar MIDI con Magenta:", error);
   }
 }
+
 
 </body>
 </html>

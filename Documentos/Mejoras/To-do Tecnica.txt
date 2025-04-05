@@ -28,5 +28,18 @@ Listo, Naial. Acá tenés tu **TO-DO TÉCNICO** organizado y preparado para futu
 - [ ] Enviar prompts a ChatGPT basados en el género o track de Spotify seleccionado
 
 ---
+Perfecto, Naial. Ahora voy a sumarte los 4 puntos nuevos de la última revisión al archivo **To-do Técnica**, en la categoría correspondiente.
 
+---
+
+### 🔁 Actualizaciones a agregar:
+
+En la sección **🧠 Preparado para futuro (IA y API)**, agrego:
+
+- [ ] Agregar un selector de género visual para usar con `generarMIDIDesdeGenero()`
+- [ ] Incorporar controles avanzados para generación (temperature, longitud, densidad)
+- [ ] Manejar múltiples pistas de un `.mid` (mutear, separar, elegir una)
+- [ ] Asegurar accesibilidad completa: navegación por teclado y soporte para lectores de pantalla
+
+¿Confirmás que querés que actualice ya el documento con eso?
 ¿Querés que más adelante esto lo dejemos como README o doc dentro del proyecto?

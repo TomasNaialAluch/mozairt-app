@@ -156,7 +156,8 @@
     <div class="row justify-content-center mb-5">
       <div class="col-md-8 text-center">
         <input type="text" class="form-control form-control-lg text-center mb-3" placeholder="Buscá canciones o playlists en Spotify" id="spotify-search">
-        <button class="btn btn-outline-primary" onclick="handleSpotifySearch()">Buscar en Spotify</button>
+        <button class="btn btn-outline-primary" onclick="buscarEnSpotify()">Buscar en Spotify</button>
+
       </div>
     </div>
 
@@ -191,6 +192,8 @@
         <button class="btn btn-primary btn-lg">Continuar</button>
       </div>
     </div>
+    <div id="spotify-results" class="mt-4"></div>
+
   </section>
 </div>
 
@@ -204,27 +207,109 @@
 </footer>
 
 <script>
+  const SPOTIFY_CLIENT_ID = 'TU_CLIENT_ID';
+const SPOTIFY_REDIRECT_URI = 'http://localhost:5500'; // o la URL donde corras tu app
+let accessToken = null;
+
+function getSpotifyTokenFromURL() {
+  const hash = window.location.hash;
+  if (hash) {
+    const params = new URLSearchParams(hash.substring(1));
+    accessToken = params.get("access_token");
+    if (accessToken) {
+      // console.log("🎫 Token obtenido:", accessToken); // 🧹 Solo para debug, comentar en producción
+    }
+  }
+}
+
+getSpotifyTokenFromURL();
+
+
+function authenticateSpotify() {
+  const scopes = ['user-read-private', 'user-read-email'];
+  const url = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&redirect_uri=${encodeURIComponent(SPOTIFY_REDIRECT_URI)}&scope=${encodeURIComponent(scopes.join(' '))}&response_type=token`;
+  window.location.href = url;
+}
+
   const contentContainer = document.getElementById("content-container");
   const userInput = document.getElementById("user-input");
 
   // Función para agregar un mensaje al contenido
-  function addMessage(text, sender = "mozart") {
-    const messageDiv = document.createElement("div");
-    messageDiv.classList.add("message");
+ // Mensajes enriquecidos por tipo
+const messageTemplates = {
+  genero: (genre) => ({
+    html: `
+      Has seleccionado el género <strong>${genre}</strong>.<br>
+      ¿Qué te gustaría hacer?
+    `,
+    buttons: [
+      { label: "🎵 Generar demo", onclick: `generarMIDIDesdeGenero()` },
+      { label: "🎛️ Editar parámetros", onclick: `abrirConfiguracionGenero()` }
+    ]
+  }),
 
-    if (sender === "mozart") {
-      messageDiv.innerHTML = `<strong>MozAirt:</strong> ${text}`;
-    } else {
-      messageDiv.innerHTML = `<strong>Tú:</strong> ${text}`;
-    }
+  track: (track) => ({
+    html: `
+      Referencia seleccionada: <strong>${track.name}</strong> de ${track.artists}.<br>
+      ¿Cómo querés continuar?
+    `,
+    buttons: [
+      { label: "🎼 Generar MIDI similar", onclick: `generateMIDIFromTrack('${track.id}')` },
+      { label: "📊 Analizar estructura", onclick: `analyzeTrack('${track.id}')` }
+    ]
+  }),
 
-    contentContainer.appendChild(messageDiv);
+  error: (msg) => ({
+    html: `<strong>⚠️ Error:</strong> ${msg}`,
+    buttons: []
+  }),
 
-    // Scroll automático al final del contenido
-    setTimeout(() => {
-      contentContainer.scrollTop = contentContainer.scrollHeight;
-    }, 50);
+  info: (msg) => ({
+    html: msg,
+    buttons: []
+  })
+};
+
+// Reemplaza a addMessage()
+function showSmartMessage(type, data) {
+  const template = messageTemplates[type](data);
+  const messageDiv = document.createElement("div");
+  messageDiv.className = "message mozart fade-in";
+  messageDiv.innerHTML = `<div>${template.html}</div>`;
+
+  // Botones interactivos (si los hay)
+  if (template.buttons.length) {
+    const buttonGroup = document.createElement("div");
+    buttonGroup.className = "mt-2";
+
+    template.buttons.forEach(btn => {
+      const b = document.createElement("button");
+      b.className = "btn btn-outline-primary btn-sm me-2";
+      b.innerHTML = btn.label;
+      b.setAttribute("onclick", btn.onclick);
+      buttonGroup.appendChild(b);
+    });
+
+    messageDiv.appendChild(buttonGroup);
   }
+
+  contentContainer.appendChild(messageDiv);
+  contentContainer.scrollTo({ top: contentContainer.scrollHeight, behavior: "smooth" });
+}
+function selectTrack(track) {
+  appState.selectedTrack = track;
+
+  // Mostrar mensaje enriquecido
+  showSmartMessage("track", {
+    id: track.id,
+    name: track.name,
+    artists: track.artists.map(a => a.name).join(", ")
+  });
+}
+
+
+
+
 
   // Función para manejar el envío de mensajes del usuario
   function sendMessage() {
@@ -232,7 +317,8 @@
     if (!userText) return;
 
     // Agregar mensaje del usuario
-    addMessage(userText, "user");
+    showUserMessage(userText);
+
 
     // Limpiar el input
     userInput.value = "";
@@ -252,7 +338,8 @@
           <strong>Otras opciones:</strong><br>
           <button class="btn btn-outline-primary">Search en Spotify</button>`;
       }
-      addMessage(response, "mozart");
+      showSmartMessage("info", response);
+
     }, 500);
   }
 
@@ -278,39 +365,22 @@
       const genre = this.getAttribute("data-genre");
 
       // Agregar mensaje del usuario
-      addMessage(`Género seleccionado: ${genre}`, "user");
+      showUserMessage(`Género seleccionado: ${genre}`);
+
 
       // Respuesta simulada de MozAirt
       setTimeout(() => {
         const response = `
           <strong>Género seleccionado:</strong> ${genre}<br>
           Este género será utilizado como referencia para generar tu archivo MIDI.`;
-        addMessage(response, "mozart");
+          showSmartMessage("info", response);
+
       }, 500);
     });
   });
 
-  // Manejar búsqueda de Spotify
-  function handleSpotifySearch() {
-    const searchInput = document.getElementById("spotify-search");
-    const searchText = searchInput.value.trim();
 
-    if (!searchText) {
-      alert("Por favor, ingresa una referencia en el buscador.");
-      return;
-    }
-
-    // Agregar mensaje del usuario
-    addMessage(searchText, "user");
-
-    // Respuesta simulada de MozAirt
-    setTimeout(() => {
-      const response = `
-        <strong>Referencia seleccionada:</strong> ${searchText}<br>
-        Esta referencia será utilizada para generar tu archivo MIDI.`;
-      addMessage(response, "mozart");
-    }, 500);
-  }
+ 
 </script>
 <!-- Magenta.js -->
 <script src="https://cdn.jsdelivr.net/npm/@magenta/music@1.23.1"></script>
@@ -324,7 +394,8 @@
       document.querySelectorAll('.btn-outline-primary').forEach(btn => btn.classList.remove('active'));
       this.classList.add('active');
       selectedGenre.value = this.textContent.trim();
-      addMessage(`Género seleccionado: ${selectedGenre.value}`, "mozart");
+      showSmartMessage("genero", selectedGenre.value);
+
     });
   });
 
@@ -334,7 +405,8 @@
 
   async function generarMIDIDesdeGenero() {
     if (!selectedGenre.value) {
-      addMessage("Elegí un género para comenzar.", "mozart");
+      showSmartMessage("info", "Elegí un género para comenzar.");
+
       return;
     }
 
@@ -354,41 +426,62 @@
     const url = URL.createObjectURL(blob);
 
     const link = `<a href="${url}" download="mozairt_${selectedGenre.value}.mid" class="btn btn-outline-primary mt-3">Descargar MIDI generado</a>`;
-    addMessage("🎵 MIDI generado desde cero según el género seleccionado.<br>" + link, "mozart");
+    showSmartMessage("info", `🎵 MIDI generado desde cero según el género seleccionado.<br>${link}`);
+
   }
-</script>
-// Genera un archivo MIDI desde cero usando Magenta, basado en el género elegido por el usuario
-async function generarMIDIDesdeGenero() {
-  // Validación básica
-  if (!selectedGenre.value) {
-    addMessage("Elegí un género para comenzar.", "mozart");
+  async function buscarEnSpotify() {
+  const query = document.getElementById("spotify-search").value;
+
+  if (!accessToken) {
+    authenticateSpotify();
     return;
   }
 
   try {
-    // Semilla vacía como punto de partida
-    const seed = { notes: [], totalTime: 1.0 };
+    const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    });
+    const data = await res.json();
 
-    // Cuantización de la secuencia base
-    const quantized = mm.sequences.quantizeNoteSequence(seed, 4);
+    let html = `<h5 class="mt-3">Resultados para: "${query}"</h5><div class="row">`;
+    data.tracks.items.forEach(track => {
+      html += `
+        <div class="col-md-6 mb-3">
+          <div class="card h-100 shadow-sm">
+            <img src="${track.album.images[0]?.url}" class="card-img-top" alt="${track.name}">
+            <div class="card-body">
+              <h6 class="card-title">${track.name}</h6>
+              <p class="text-muted small">${track.artists.map(a => a.name).join(', ')}</p>
+              <button class="btn btn-outline-primary btn-sm">Usar como referencia</button>
+            </div>
+          </div>
+        </div>`;
+    });
+    html += '</div>';
 
-    // Generación con Magenta
-    const continuation = await musicRNN.continueSequence(quantized, 64, 1.2);
+    document.getElementById("spotify-results").innerHTML = html;
 
-    // Conversión a archivo MIDI descargable
-    const midi = mm.sequenceProtoToMidi(continuation);
-    const blob = new Blob([midi], { type: 'audio/midi' });
-    const url = URL.createObjectURL(blob);
+  } catch (err) {
+    console.error("Error al buscar:", err);
+    showSmartMessage("error", "Error al buscar en Spotify. Probá más tarde.");
 
-    // Mensaje con link de descarga
-    const link = `<a href="${url}" download="mozairt_${selectedGenre.value}.mid" class="btn btn-outline-primary mt-3">Descargar MIDI generado</a>`;
-    addMessage("🎵 MIDI generado desde cero según el género seleccionado.<br>" + link, "mozart");
-
-  } catch (error) {
-    addMessage("⚠️ Ocurrió un error al generar el MIDI. Intentalo de nuevo.", "mozart");
-    console.error("Error al generar MIDI con Magenta:", error);
   }
 }
+
+function showUserMessage(text) {
+  const messageDiv = document.createElement("div");
+  messageDiv.className = "message user fade-in";
+  messageDiv.textContent = text;
+  contentContainer.appendChild(messageDiv);
+  contentContainer.scrollTo({ top: contentContainer.scrollHeight, behavior: "smooth" });
+}
+
+  
+</script>
+
+
 
 </body>
 </html>

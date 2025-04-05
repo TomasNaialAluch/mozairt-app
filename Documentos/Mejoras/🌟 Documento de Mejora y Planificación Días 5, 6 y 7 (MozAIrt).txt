@@ -1,0 +1,81 @@
+### 🌟 Documento de Mejora y Planificación: Días 5, 6 y 7 (MozAIrt)
+
+Este documento combina observaciones de revisiones externas y nuestro propio roadmap para planificar mejoras desde el Día 5 en adelante.
+
+---
+
+## 🔢 Estado actual (Día 5 - completado):
+- Generación de MIDI desde cero usando Magenta.js
+- Selección de géneros musicales (Techno, House, etc.)
+- Nombre de archivo generado personalizado por género
+- Descarga de archivo `.mid` generado
+- Mensajes claros tipo: “MIDI generado estilo Techno a 128 BPM”
+- Validaciones: género seleccionado, errores al generar, etc.
+
+---
+
+## 🌍 Mejores prácticas y sugerencias externas a implementar (futuro)
+
+### 🚀 Integración real con Spotify (Día 6)
+- Autenticación con `client_id`, `redirect_uri`, `token`
+- Buscar canciones/playlists reales usando la Web API
+- Mostrar resultados con portada, artista y botón "Usar como referencia"
+- Preview de audio si está disponible
+
+```js
+const response = await fetch(`https://api.spotify.com/v1/search?q=${query}&type=track`, {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+```
+
+### 🎵 Generación avanzada de MIDI (Día 7)
+- Usar distintos modelos: MusicRNN, MusicVAE según estilo
+- Configurar presets por género:
+```js
+const genrePresets = {
+  "Techno": { bpm: 132, instruments: ["bass", "percussion"], timeSignature: [4, 4] },
+  "Melodic House & Techno": { bpm: 122, instruments: ["synth_bass", "pad"], timeSignature: [4, 4] }
+}
+```
+- Permitir selección de: tempo, tonalidad, firma de compás
+- Generación desde cero con secuencias base estructuradas (ticks, tempo, etc.)
+
+### ✨ Interfaz enriquecida (Día 6/7)
+- Sliders para ajustar temperatura, complejidad, densidad
+- Visualización del MIDI generado con `mm.Visualizer`
+- Audio player (requiere workaround, no soporta `.mid` nativo)
+- Accesibilidad: navegación por teclado, ARIA labels, contraste
+
+### 💬 Mensajes con IA enriquecidos (Día 7+)
+- Chat real con OpenAI, respuestas guiadas y explicativas
+- Mensajes con botones: "Generar demo", "Ver ejemplos", "Editar parámetros"
+- Mostrar previews o acción directa en el chat
+- Respuestas tipo plantilla:
+```js
+messageTemplates = {
+  genreSelected: (genre) => `Has seleccionado ${genre}. ¿Querés generar una demo?` ,
+  spotifyResult: (item) => `Referencia: ${item.name} – ${item.artists.join(", ")}`
+}
+```
+
+---
+
+## 🔒 Seguridad y performance
+- Validar tokens de Spotify (autenticación segura)
+- Sanitizar entradas del usuario (búsqueda, chat, parámetros)
+- Usar `URL.revokeObjectURL` tras descargar MIDIs
+- Usar Web Workers para procesamiento Magenta sin congelar la interfaz
+
+---
+
+## 📊 Recomendaciones finales
+- Modularizar el JS por componente (Spotify, Magenta, UI)
+- Separar lógica en funciones reutilizables (`generateMIDI()`, `handleSpotifyTrack()`, etc.)
+- Guardar track seleccionado como referencia global
+- Sistema de proyectos o presets guardados (localStorage o backend)
+- Incluir tutorial interactivo o ayuda para nuevos usuarios
+
+---
+
+✅ Todo esto se implementará en los Días 6 y 7 del roadmap.
+

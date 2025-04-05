@@ -34,6 +34,8 @@ Perfecto, Naial. Acá tenés un texto listo para guardar o copiar, que podés pe
 - Modularizar el código JS en archivos separados.
 - Separar CSS propio del estilo inline o incrustado.
 - Agregar atributos `aria-label` y usar etiquetas `<main>` para mejorar accesibilidad.
+- Validar también el **tamaño del archivo** (sugerido máximo: 5MB).
+- Usar `URL.revokeObjectURL()` para liberar recursos tras descarga.
 
 ---
 
@@ -69,6 +71,9 @@ Perfecto, Naial. Acá tenés un texto listo para guardar o copiar, que podés pe
 - Implementar mensajes IA que eduquen al usuario cuando suba `.mid` multitrack:
   > “🎧 Veo que tu archivo tiene varias pistas. Trabajar con un solo track ayuda a mantener la claridad y compatibilidad entre DAWs. ¿Querés que te ayude a separar las capas?”
 - Permitir control de temperatura y longitud generativa desde interfaz o IA.
+- Agregar sliders para controlar densidad/complejidad.
+- Incluir tooltips en botones de instrumentos.
+- Permitir seleccionar tempo, tonalidad y estilo musical desde la interfaz.
 
 ---
 
@@ -84,6 +89,14 @@ Perfecto, Naial. Acá tenés un texto listo para guardar o copiar, que podés pe
   ```
 - Guardar historial del chat en `localStorage` o backend.
 - Integrar respuestas naturales, seductoras y explicativas desde ChatGPT.
+
+---
+
+### 🔒 Recomendaciones de seguridad para futuro
+- Validar contenido interno del archivo MIDI (no solo headers)
+- Preparar backend con CORS y protección CSRF si se crean cuentas
+- Implementar limpieza de objetos y URLs generadas (`URL.revokeObjectURL`)
+- Evaluar uso de Web Workers para procesamiento sin bloquear la UI
 
 ---
 
