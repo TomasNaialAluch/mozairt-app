@@ -1,0 +1,32 @@
+Listo, Naial. Acá tenés tu **TO-DO TÉCNICO** organizado y preparado para futuras etapas:
+
+---
+
+### ✅ Ya hecho
+- Subida de `.mid`
+- Generación de capa adicional con Magenta
+- Descarga funcional del nuevo `.mid`
+- Detección de múltiples tracks
+- Mensaje educativo sobre buenas prácticas de producción
+
+---
+
+### 🔜 A implementar pronto
+- [ ] Mostrar loading mientras se inicializa Magenta.js
+- [ ] Validar que el archivo cargado sea `.mid` antes de procesar
+- [ ] Agregar scroll suave al contenedor de mensajes (`contentContainer`)
+- [ ] Agregar `aria-label` a botones para accesibilidad
+- [ ] Reemplazar `div#content-container` por una etiqueta `<main>`
+
+---
+
+### 🧠 Preparado para futuro (IA y API)
+- [ ] Detectar `.mid` con múltiples pistas y usar ChatGPT para explicar al usuario (de forma amable) por qué conviene trabajar con un solo track
+- [ ] Usar ChatGPT para generar o modificar MIDI según estilo, intención o estructura deseada
+- [ ] Permitir al usuario separar pistas de un `.mid` multitrack (y elegir con cuál trabajar)
+- [ ] Integrar búsqueda real con la API de Spotify para obtener referencias musicales
+- [ ] Enviar prompts a ChatGPT basados en el género o track de Spotify seleccionado
+
+---
+
+¿Querés que más adelante esto lo dejemos como README o doc dentro del proyecto?

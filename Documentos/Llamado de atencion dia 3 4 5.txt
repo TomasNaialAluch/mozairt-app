@@ -1,0 +1,91 @@
+Perfecto, Naial. Acá tenés un texto listo para guardar o copiar, que podés pegar cuando llegues a los días 3, 4, 5 y 6 del plan:
+
+---
+
+### 🧠 Notas para implementar mejoras en días siguientes
+
+#### 🗕️ **Día 3 — Mostrar metadata del archivo MIDI**
+- Usar `mm.midiToSequenceProto()` para extraer info básica del `.mid` subido:
+  ```js
+  const sequence = mm.midiToSequenceProto(midiData);
+  const bpm = sequence.tempos?.[0]?.qpm;
+  const key = sequence.keySignatures?.[0];
+  addMessage(`BPM: ${bpm} | Tonalidad: ${key.key}`, "mozart");
+  ```
+- Mostrar número de tracks, duración y tonalidad al usuario.
+- Agregar análisis más completo:
+  ```js
+  function analyzeMIDI(sequence) {
+    const analysis = {
+      bpm: sequence.tempos[0]?.qpm || 120,
+      key: getKeyName(sequence.keySignatures[0]?.key || 0),
+      timeSignature: sequence.timeSignatures[0] || { numerator: 4, denominator: 4 },
+      totalNotes: sequence.notes.length,
+      duration: sequence.totalTime.toFixed(2) + " segundos"
+    };
+    return analysis;
+  }
+
+  function getKeyName(keyNumber) {
+    const keys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    return keys[keyNumber] || "Desconocida";
+  }
+  ```
+- Modularizar el código JS en archivos separados.
+- Separar CSS propio del estilo inline o incrustado.
+- Agregar atributos `aria-label` y usar etiquetas `<main>` para mejorar accesibilidad.
+
+---
+
+#### 🗕️ **Día 4 — Integración real con Spotify API**
+- Crear cuenta en [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
+- Implementar búsqueda real de canciones con `/search`:
+  ```js
+  const response = await fetch(`https://api.spotify.com/v1/search?q=${query}&type=track`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  ```
+- Mostrar resultados con imagen, título y botón de “usar como referencia”.
+- Usar audio features (`/audio-features/{id}`) para obtener BPM, key, energy, etc.
+- Aplicar configuración por género:
+  ```js
+  const genreConfig = {
+    "Techno": { length: 64, temperature: 1.3 },
+    "House": { length: 48, temperature: 1.1 },
+    // ...
+  };
+  ```
+- Optimizar carga de scripts con `defer` o `async` para mejor performance.
+
+---
+
+#### 🗕️ **Día 5 — Integración con OpenAI para generación musical guiada**
+- Conectar backend con `/api/openai`.
+- Enviar un prompt como:
+  ```js
+  const prompt = `Generá una línea de bajo estilo Melodic Techno con BPM 122 en A menor.`;
+  ```
+- Recibir respuesta y traducirla en parámetros musicales para guiar a Magenta.
+- Implementar mensajes IA que eduquen al usuario cuando suba `.mid` multitrack:
+  > “🎧 Veo que tu archivo tiene varias pistas. Trabajar con un solo track ayuda a mantener la claridad y compatibilidad entre DAWs. ¿Querés que te ayude a separar las capas?”
+- Permitir control de temperatura y longitud generativa desde interfaz o IA.
+
+---
+
+#### 🗕️ **Día 6 — Chat real con IA**
+- Reemplazar el chat simulado:
+  ```js
+  const response = await fetch('/api/chat', {
+    method: 'POST',
+    body: JSON.stringify({ message: userInput })
+  });
+  const data = await response.json();
+  addMessage(data.reply, "mozart");
+  ```
+- Guardar historial del chat en `localStorage` o backend.
+- Integrar respuestas naturales, seductoras y explicativas desde ChatGPT.
+
+---
+
+📌 Estas mejoras ya están previstas en tu flujo, no son adelantadas. Las vas a implementar paso a paso cuando llegues a cada día.
+

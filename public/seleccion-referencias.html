@@ -312,6 +312,83 @@
     }, 500);
   }
 </script>
+<!-- Magenta.js -->
+<script src="https://cdn.jsdelivr.net/npm/@magenta/music@1.23.1"></script>
+
+<script>
+  const selectedGenre = { value: null };
+
+  // Marcar género seleccionado
+  document.querySelectorAll('.btn-outline-primary').forEach(button => {
+    button.addEventListener('click', function () {
+      document.querySelectorAll('.btn-outline-primary').forEach(btn => btn.classList.remove('active'));
+      this.classList.add('active');
+      selectedGenre.value = this.textContent.trim();
+      addMessage(`Género seleccionado: ${selectedGenre.value}`, "mozart");
+    });
+  });
+
+  // Modelo Magenta
+  const musicRNN = new mm.MusicRNN('https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/basic_rnn');
+  musicRNN.initialize();
+
+  async function generarMIDIDesdeGenero() {
+    if (!selectedGenre.value) {
+      addMessage("Elegí un género para comenzar.", "mozart");
+      return;
+    }
+
+    // 🔁 Acá se podrá integrar datos desde Spotify y ChatGPT
+    // const datosSpotify = await fetch('/api/spotify', { ... });
+    // const instruccionIA = await fetch('/api/openai', { body: JSON.stringify({ genero: selectedGenre.value }) });
+
+    const seed = {
+      notes: [],
+      totalTime: 1.0
+    };
+
+    const quantized = mm.sequences.quantizeNoteSequence(seed, 4);
+    const continuation = await musicRNN.continueSequence(quantized, 64, 1.2);
+    const midi = mm.sequenceProtoToMidi(continuation);
+    const blob = new Blob([midi], { type: 'audio/midi' });
+    const url = URL.createObjectURL(blob);
+
+    const link = `<a href="${url}" download="mozairt_${selectedGenre.value}.mid" class="btn btn-outline-primary mt-3">Descargar MIDI generado</a>`;
+    addMessage("🎵 MIDI generado desde cero según el género seleccionado.<br>" + link, "mozart");
+  }
+</script>
+// Genera un archivo MIDI desde cero usando Magenta, basado en el género elegido por el usuario
+async function generarMIDIDesdeGenero() {
+  // Validación básica
+  if (!selectedGenre.value) {
+    addMessage("Elegí un género para comenzar.", "mozart");
+    return;
+  }
+
+  try {
+    // Semilla vacía como punto de partida
+    const seed = { notes: [], totalTime: 1.0 };
+
+    // Cuantización de la secuencia base
+    const quantized = mm.sequences.quantizeNoteSequence(seed, 4);
+
+    // Generación con Magenta
+    const continuation = await musicRNN.continueSequence(quantized, 64, 1.2);
+
+    // Conversión a archivo MIDI descargable
+    const midi = mm.sequenceProtoToMidi(continuation);
+    const blob = new Blob([midi], { type: 'audio/midi' });
+    const url = URL.createObjectURL(blob);
+
+    // Mensaje con link de descarga
+    const link = `<a href="${url}" download="mozairt_${selectedGenre.value}.mid" class="btn btn-outline-primary mt-3">Descargar MIDI generado</a>`;
+    addMessage("🎵 MIDI generado desde cero según el género seleccionado.<br>" + link, "mozart");
+
+  } catch (error) {
+    addMessage("⚠️ Ocurrió un error al generar el MIDI. Intentalo de nuevo.", "mozart");
+    console.error("Error al generar MIDI con Magenta:", error);
+  }
+}
 
 </body>
 </html>

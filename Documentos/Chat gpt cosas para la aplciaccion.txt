@@ -1,0 +1,20 @@
+Perfecto, Naial. Anotado al 100%.
+
+🧠 En el futuro, cuando integremos a ChatGPT, MozAIrt va a:
+
+- Detectar automáticamente si el MIDI tiene múltiples pistas.
+- Activar un mensaje generado por IA, con tono **amable, didáctico y seductor**, no rígido.
+- Explicar con lenguaje cercano **por qué es mejor trabajar con un solo track por archivo** (por claridad, control, compatibilidad, etc.).
+- **Invitar al usuario** a separar los elementos musicales para sacar el mejor provecho de MozAIrt, sin imponerlo.
+
+---
+
+💡 Ejemplo futuro de respuesta de ChatGPT:
+> “Hey, veo que tu archivo tiene varias pistas.  
+> Te cuento algo que usamos mucho los productores: trabajar con un solo track por archivo te da más control, evita enredos en el DAW y permite enfocarte mejor en cada capa musical.  
+> ¿Te gustaría que te ayude a separar las pistas o preferís seguir así?”
+
+---
+
+Queda agendado como parte esencial del flujo de personalización MIDI.  
+¿Pasamos al próximo paso del Día 3 o querés sumar algo más a este momento educativo?
