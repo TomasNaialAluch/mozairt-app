@@ -457,7 +457,8 @@ async function generarMIDIConCategoria() {
     const uploadForm = new FormData();
     uploadForm.append("file", blob, "mozairt_output.mid");
 
-    const uploadRes = await fetch("/api/upload", {
+    const uploadRes = await fetch("https://mozairt-app-git-main-naials-projects.vercel.app/api/upload", 
+      {
       method: "POST",
       body: uploadForm
     });
