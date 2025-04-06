@@ -165,47 +165,60 @@
     <h1>Personaliza tu archivo MIDI</h1>
   </header>
 
-  <!-- Contenido dinámico -->
-  <section id="personalizacion-midi" class="container fade-in">
-    <h2 class="text-center mb-5">Elige los elementos musicales para tu archivo MIDI</h2>
+ <!-- Contenido dinámico -->
+<section id="personalizacion-midi" class="container fade-in">
+  <h2 class="text-center mb-5">Elige los elementos musicales para tu archivo MIDI</h2>
 
+  <div class="row justify-content-center mb-5">
+    <div class="col-md-8 text-center">
+      <input type="file" class="form-control" id="midi-file" />
+      <button class="btn btn-outline-primary mt-3" onclick="handleMidiUpload()">Cargar archivo MIDI</button>
+    </div>
+  </div>
+
+  <div class="row justify-content-center g-4">
+    <div class="col-md-3">
+      <div class="option-group">
+        <h5>Bajos y Ritmos</h5>
+        <button class="btn btn-outline-primary" id="bassline-btn">Bajo (Bassline)</button>
+        <button class="btn btn-outline-primary" id="percussion-btn">Percusión</button>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="option-group">
+        <h5>Armonías</h5>
+        <button class="btn btn-outline-primary" id="chords-btn">Acordes (Chords)</button>
+        <button class="btn btn-outline-primary" id="arpeggio-btn">Arpegios</button>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="option-group">
+        <h5>Melodías y Texturas</h5>
+        <button class="btn btn-outline-primary" id="leads-btn">Leads</button>
+        <button class="btn btn-outline-primary" id="pads-btn">Pads</button>
+        <button class="btn btn-outline-primary" id="stabs-btn">Stabs</button>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="option-group">
+        <h5>Sintetizadores</h5>
+        <button class="btn btn-outline-primary" id="synths-btn">Synths</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario de carga -->
+  <form action="http://127.0.0.1:5000/upload-midi" method="POST" enctype="multipart/form-data">
     <div class="row justify-content-center mb-5">
       <div class="col-md-8 text-center">
-        <input type="file" class="form-control" id="midi-file" />
-        <button class="btn btn-outline-primary mt-3" onclick="handleMidiUpload()">Cargar archivo MIDI</button>
+        <input type="file" class="form-control" name="file" id="midi-file" />
+        <button class="btn btn-outline-primary mt-3" type="submit">Subir archivo MIDI</button>
       </div>
     </div>
+  </form>
 
-    <div class="row justify-content-center g-4">
-      <div class="col-md-3">
-        <div class="option-group">
-          <h5>Bajos y Ritmos</h5>
-          <button class="btn btn-outline-primary" id="bassline-btn">Bajo (Bassline)</button>
-          <button class="btn btn-outline-primary" id="percussion-btn">Percusión</button>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="option-group">
-          <h5>Armonías</h5>
-          <button class="btn btn-outline-primary" id="chords-btn">Acordes (Chords)</button>
-          <button class="btn btn-outline-primary" id="arpeggio-btn">Arpegios</button>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="option-group">
-          <h5>Melodías y Texturas</h5>
-          <button class="btn btn-outline-primary" id="leads-btn">Leads</button>
-          <button class="btn btn-outline-primary" id="pads-btn">Pads</button>
-          <button class="btn btn-outline-primary" id="stabs-btn">Stabs</button>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="option-group">
-          <h5>Sintetizadores</h5>
-          <button class="btn btn-outline-primary" id="synths-btn">Synths</button>
-        </div>
-      </div>
-    </div>
+</section>
+
 
     <div class="row justify-content-center mt-5">
       <div class="col-md-4 text-center">
