@@ -209,7 +209,8 @@
 
     <div class="row justify-content-center mt-5">
       <div class="col-md-4 text-center">
-        <button class="btn btn-primary btn-lg">Generar MIDI</button>
+        <button class="btn btn-primary btn-lg" onclick="generarMIDIConCategoria()">Generar MIDI</button>
+
       </div>
     </div>
   </section>
@@ -327,7 +328,7 @@
     addMessage("Por favor, seleccioná un archivo MIDI.", "mozart");
     return;
   }
-  
+
   const file = fileInput.files[0];
 
   // Validar extensión del archivo
@@ -346,7 +347,6 @@
   const loader = document.getElementById("loader");
 
   try {
-    
     loader.style.display = "block";
     const reader = new FileReader();
 
@@ -354,6 +354,7 @@
       try {
         const midiData = new Uint8Array(e.target.result);
         const midi = mm.midiToSequenceProto(midiData);
+        window.midiGuardado = midi;
 
         // Verificar cantidad de pistas
         const numTracks = midi.tracks?.length || 1;
@@ -361,7 +362,7 @@
           addMessage(`⚠️ Tu archivo MIDI tiene ${numTracks} pistas. Se recomienda trabajar con una sola pista para evitar problemas de compatibilidad.`, "mozart");
         }
 
-        // Procesar el archivo MIDI (cuantización, extracción de metadata, etc.)
+        // Procesar y mostrar feedback
         const quantized = mm.sequences.quantizeNoteSequence(midi, 4);
         const bpm = quantized.tempos?.[0]?.qpm || "Desconocido";
         const key = quantized.keySignatures?.[0]?.key || "Sin info";
@@ -373,45 +374,6 @@
           Notas totales: ${totalNotes}
         `, "mozart");
 
-        // Generar continuación musical
-        try {
-          const continuation = await musicRNN.continueSequence(quantized, 32, 1.2);
-const combined = mm.sequences.concatenate([quantized, continuation]);
-const newMidi = mm.sequenceProtoToMidi(combined);
-const blob = new Blob([newMidi], { type: 'audio/midi' });
-
-// Link local
-const url = URL.createObjectURL(blob);
-const localLink = `<a href="${url}" download="mozairt_output.mid" class="btn btn-outline-primary mt-3">⬇️ Descargar directo</a>`;
-
-// Subir a la nube
-const uploadForm = new FormData();
-uploadForm.append("file", blob, "mozairt_output.mid");
-
-try {
-  const uploadRes = await fetch("/api/upload", {
-    method: "POST",
-    body: uploadForm
-  });
-
-  const uploadData = await uploadRes.json();
-
-  if (uploadRes.ok && uploadData.url) {
-    const cloudLink = `<a href="${uploadData.url}" target="_blank" class="btn btn-outline-primary mt-3">📤 Descargar desde la nube</a>`;
-    addMessage(`✅ Archivo generado con una capa adicional.<br>${localLink}<br><br>${cloudLink}`, "mozart");
-  } else {
-    addMessage(`✅ Archivo generado con una capa adicional.<br>${localLink}<br><br>⚠️ No se pudo subir a la nube.`, "mozart");
-  }
-} catch (uploadError) {
-  console.error("❌ Error al subir a la nube:", uploadError);
-  addMessage(`✅ Archivo generado con una capa adicional.<br>${localLink}<br><br>❌ Error al subir a la nube.`, "mozart");
-}
-
-         
-        } catch (genError) {
-          addMessage("⚠️ Error al generar el MIDI. Probá con otro archivo.", "mozart");
-          console.error("Error en generación:", genError);
-        }
       } catch (procError) {
         addMessage("⚠️ Error al procesar el archivo MIDI.", "mozart");
         console.error("Error en procesamiento:", procError);
@@ -421,16 +383,13 @@ try {
     };
 
     reader.readAsArrayBuffer(file);
+
   } catch (error) {
     addMessage("⚠️ Ocurrió un error inesperado.", "mozart");
     console.error("Error inesperado:", error);
     loader.style.display = "none";
   }
 }
-
-
- 
- 
 
 </script>
 <script>
@@ -467,6 +426,48 @@ async function generarMIDIDesdeGenero() {
   }
 }
 </script>
+<script>async function generarMIDIConCategoria() {
+  if (!window.midiGuardado) {
+    addMessage("⚠️ Primero subí un archivo MIDI válido.", "mozart");
+    return;
+  }
 
+  if (!selectedElement.type) {
+    addMessage("⚠️ Elegí qué querés generar: lead, bassline, acordes, etc.", "mozart");
+    return;
+  }
+
+  try {
+    const quantized = mm.sequences.quantizeNoteSequence(window.midiGuardado, 4);
+    const continuation = await musicRNN.continueSequence(quantized, 32, 1.2);
+    const combined = mm.sequences.concatenate([quantized, continuation]);
+    const newMidi = mm.sequenceProtoToMidi(combined);
+    const blob = new Blob([newMidi], { type: 'audio/midi' });
+
+    const url = URL.createObjectURL(blob);
+    const localLink = `<a href="${url}" download="mozairt_output.mid" class="btn btn-outline-primary mt-3">⬇️ Descargar directo</a>`;
+
+    const uploadForm = new FormData();
+    uploadForm.append("file", blob, "mozairt_output.mid");
+
+    const uploadRes = await fetch("/api/upload", {
+      method: "POST",
+      body: uploadForm
+    });
+
+    const uploadData = await uploadRes.json();
+
+    if (uploadRes.ok && uploadData.url) {
+      const cloudLink = `<a href="${uploadData.url}" target="_blank" class="btn btn-outline-primary mt-3">📤 Descargar desde la nube</a>`;
+      addMessage(`✅ MIDI generado como <strong>${selectedElement.type}</strong>.<br>${localLink}<br><br>${cloudLink}`, "mozart");
+    } else {
+      addMessage(`✅ MIDI generado como <strong>${selectedElement.type}</strong>.<br>${localLink}<br><br>⚠️ No se pudo subir a la nube.`, "mozart");
+    }
+  } catch (error) {
+    console.error("❌ Error al generar el MIDI:", error);
+    addMessage("❌ Ocurrió un error al generar el nuevo MIDI. Probá de nuevo o usá otro archivo.", "mozart");
+  }
+}
+</script>
 </body>
 </html>
