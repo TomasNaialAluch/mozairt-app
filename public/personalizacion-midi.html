@@ -427,7 +427,8 @@ async function generarMIDIDesdeGenero() {
   }
 }
 </script>
-<script>async function generarMIDIConCategoria() {
+<script>
+async function generarMIDIConCategoria() {
   if (!window.midiGuardado) {
     addMessage("⚠️ Primero subí un archivo MIDI válido.", "mozart");
     return;
@@ -440,7 +441,12 @@ async function generarMIDIDesdeGenero() {
 
   try {
     const quantized = mm.sequences.quantizeNoteSequence(window.midiGuardado, 4);
+    console.log("🎹 Quantized MIDI:", quantized);
+    console.log("⏳ Enviando a Magenta...", selectedElement.type);
+
     const continuation = await musicRNN.continueSequence(quantized, 32, 1.2);
+    console.log("✅ Magenta devolvió una continuación");
+
     const combined = mm.sequences.concatenate([quantized, continuation]);
     const newMidi = mm.sequenceProtoToMidi(combined);
     const blob = new Blob([newMidi], { type: 'audio/midi' });
@@ -465,10 +471,12 @@ async function generarMIDIDesdeGenero() {
       addMessage(`✅ MIDI generado como <strong>${selectedElement.type}</strong>.<br>${localLink}<br><br>⚠️ No se pudo subir a la nube.`, "mozart");
     }
   } catch (error) {
-    console.error("❌ Error al generar el MIDI:", error);
+    console.error("❌ Error exacto en continueSequence:", error);
     addMessage("❌ Ocurrió un error al generar el nuevo MIDI. Probá de nuevo o usá otro archivo.", "mozart");
   }
 }
+
+
 async function analizarMIDIArchivo(file) {
   const loader = document.getElementById("loader");
   loader.style.display = "block";
