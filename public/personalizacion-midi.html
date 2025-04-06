@@ -255,40 +255,38 @@
 
   // Función para manejar el envío de mensajes del usuario
   function sendMessage() {
-    const userText = userInput.value.trim();
-    if (!userText) return;
+  const userText = userInput.value.trim();
+  if (!userText) return;
 
-    // Agregar mensaje del usuario
-    addMessage(userText, "user");
+  // Agregar mensaje del usuario
+  addMessage(userText, "user");
 
-    // Limpiar el input
-    userInput.value = "";
+  // Limpiar el input
+  userInput.value = "";
 
-    // Respuesta simulada de MozAIrt
-    setTimeout(() => {
-      let response = "Entiendo... ¿Qué más necesitas?";
-      if (userText.toLowerCase().includes("midi")) {
-        response = `Por favor, selecciona un archivo MIDI.<br><br>
-          <input type="file" class="form-control" id="midi-file" style="margin: 0 auto;" />
-          <button class="btn btn-outline-primary mt-3" onclick="handleMidiUpload()">Cargar archivo MIDI</button>`;
-      } else if (userText.toLowerCase().includes("opciones")) {
-        response = `Aquí tienes algunas opciones para personalizar tu archivo MIDI:<br><br>
-          <strong>Bajos y Ritmos:</strong><br>
-          <button class="btn btn-outline-primary">Bajo (Bassline)</button>
-          <button class="btn btn-outline-primary">Percusión</button><br><br>
-          <strong>Armonías:</strong><br>
-          <button class="btn btn-outline-primary">Acordes (Chords)</button>
-          <button class="btn btn-outline-primary">Arpegios</button><br><br>
-          <strong>Melodías y Texturas:</strong><br>
-          <button class="btn btn-outline-primary">Leads</button>
-          <button class="btn btn-outline-primary">Pads</button>
-          <button class="btn btn-outline-primary">Stabs</button><br><br>
-          <strong>Sintetizadores:</strong><br>
-          <button class="btn btn-outline-primary">Synths</button>`;
-      }
-      addMessage(response, "mozart");
-    }, 500);
-  }
+  // Respuesta simulada de MozAIrt
+  setTimeout(() => {
+    let response = "Entiendo... ¿Qué más necesitas?";
+    if (userText.toLowerCase().includes("opciones")) {
+      response = `Aquí tienes algunas opciones para personalizar tu archivo MIDI:<br><br>
+        <strong>Bajos y Ritmos:</strong><br>
+        <button class="btn btn-outline-primary">Bajo (Bassline)</button>
+        <button class="btn btn-outline-primary">Percusión</button><br><br>
+        <strong>Armonías:</strong><br>
+        <button class="btn btn-outline-primary">Acordes (Chords)</button>
+        <button class="btn btn-outline-primary">Arpegios</button><br><br>
+        <strong>Melodías y Texturas:</strong><br>
+        <button class="btn btn-outline-primary">Leads</button>
+        <button class="btn btn-outline-primary">Pads</button>
+        <button class="btn btn-outline-primary">Stabs</button><br><br>
+        <strong>Sintetizadores:</strong><br>
+        <button class="btn btn-outline-primary">Synths</button>`;
+    }
+    // Nota: Se eliminó el bloque que insertaba el input file para "midi"
+    addMessage(response, "mozart");
+  }, 500);
+}
+
 
   // Manejar el envío de mensajes al presionar Enter
   userInput.addEventListener("keypress", function (event) {
