@@ -1,0 +1,40 @@
+Sí, eso **es parte esencial del Día 8** y **sí o sí hay que tenerlo en cuenta**. Lo incluyo ahora como bloque final dentro del resumen general para que tengas TODO en un solo lugar:
+
+---
+
+## ✅ DÍA 8 – RESUMEN COMPLETO  
+📍**Objetivo principal:**  
+Implementar almacenamiento real (con URLs persistentes) para los archivos `.mid` generados o subidos por el usuario.
+
+---
+
+### 🔧 **Tareas técnicas del Plan de Trabajo**  
+📄 _Fuente: `Plan de Trabajo.txt`_
+
+- Conectar Vercel Blob (o S3).
+- Subir `.mid` generado o subido.
+- Mostrar URL persistente.
+- Descargar desde esa URL.
+- (Opcional) Guardar `.json` con metadatos.
+
+---
+
+### 📌 **Mejoras clave del Documento de Mejora Día 8**  
+📄 _Fuente: `Documento de Mejora y Planificación Días 6, 7, 8, 9 y 10 (MozAIrt).txt`_
+
+- Mostrar botón de descarga **solo si** la subida fue exitosa.  
+- Mostrar **loader visible** durante la subida.  
+- Incluir frase estilo:  
+  > “Archivo generado y guardado. Podés volver a accederlo desde este link”.
+
+---
+
+### 🗂️ **Recomendaciones extra**  
+- Guardar también un archivo `.json` con:
+  - `nombre`, `género`, `fecha`, `tipo`, `trackSpotifyID`.  
+- Usar rutas organizadas como:  
+  `mozairt/midis/usuario123/archivo.mid`  
+
+---
+
+¿Querés ahora que prepare los pasos exactos para implementar esto en Vercel Blob con JS, incluyendo cómo mostrar el link en el chat?

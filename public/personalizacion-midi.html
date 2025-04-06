@@ -346,6 +346,7 @@
   const loader = document.getElementById("loader");
 
   try {
+    
     loader.style.display = "block";
     const reader = new FileReader();
 
@@ -375,12 +376,38 @@
         // Generar continuación musical
         try {
           const continuation = await musicRNN.continueSequence(quantized, 32, 1.2);
-          const combined = mm.sequences.concatenate([quantized, continuation]);
-          const newMidi = mm.sequenceProtoToMidi(combined);
-          const blob = new Blob([newMidi], { type: 'audio/midi' });
-          const url = URL.createObjectURL(blob);
-          const downloadLink = `<a href="${url}" download="mozairt_output.mid" class="btn btn-outline-primary mt-3">Descargar MIDI generado</a>`;
-          addMessage("MIDI generado con una capa adicional.<br>" + downloadLink, "mozart");
+const combined = mm.sequences.concatenate([quantized, continuation]);
+const newMidi = mm.sequenceProtoToMidi(combined);
+const blob = new Blob([newMidi], { type: 'audio/midi' });
+
+// Link local
+const url = URL.createObjectURL(blob);
+const localLink = `<a href="${url}" download="mozairt_output.mid" class="btn btn-outline-primary mt-3">⬇️ Descargar directo</a>`;
+
+// Subir a la nube
+const uploadForm = new FormData();
+uploadForm.append("file", blob, "mozairt_output.mid");
+
+try {
+  const uploadRes = await fetch("/api/upload", {
+    method: "POST",
+    body: uploadForm
+  });
+
+  const uploadData = await uploadRes.json();
+
+  if (uploadRes.ok && uploadData.url) {
+    const cloudLink = `<a href="${uploadData.url}" target="_blank" class="btn btn-outline-primary mt-3">📤 Descargar desde la nube</a>`;
+    addMessage(`✅ Archivo generado con una capa adicional.<br>${localLink}<br><br>${cloudLink}`, "mozart");
+  } else {
+    addMessage(`✅ Archivo generado con una capa adicional.<br>${localLink}<br><br>⚠️ No se pudo subir a la nube.`, "mozart");
+  }
+} catch (uploadError) {
+  console.error("❌ Error al subir a la nube:", uploadError);
+  addMessage(`✅ Archivo generado con una capa adicional.<br>${localLink}<br><br>❌ Error al subir a la nube.`, "mozart");
+}
+
+         
         } catch (genError) {
           addMessage("⚠️ Error al generar el MIDI. Probá con otro archivo.", "mozart");
           console.error("Error en generación:", genError);
