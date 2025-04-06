@@ -12,8 +12,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
+  const busboy = await import('busboy');
+
   try {
-    const { readable, filename } = await readFileFromRequest(req);
+    const { readable, filename } = await readFileFromRequest(req, busboy);
 
     const { url } = await put(`mozairt/midis/${filename}`, readable, {
       access: 'public',
@@ -27,8 +29,7 @@ export default async function handler(req, res) {
 }
 
 // Utilidad para manejar FormData (sin bodyParser)
-async function readFileFromRequest(req) {
-  const busboy = await import('busboy');
+async function readFileFromRequest(req, busboy) {
   return new Promise((resolve, reject) => {
     const bb = busboy.default({ headers: req.headers });
     let fileRead = false;
