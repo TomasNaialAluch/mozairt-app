@@ -7,7 +7,8 @@
   <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- NexusUI -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/nexusui/2.0.4/NexusUI.min.js"></script>
+  <!-- Reemplaza el script de NexusUI por la versión más reciente -->
+<script src="https://cdn.jsdelivr.net/npm/nexusui@2.1.10/dist/NexusUI.js"></script>
   <style>
     :root {
       --black-olive: #3f3f37;
@@ -394,113 +395,101 @@
     }
 
     // Envía el archivo a tu backend con Music21
-    async function analizarMIDIArchivo(file) {
-      const loader = document.getElementById("loader");
-      loader.style.display = "block";
+   // Modifica tu función analizarMIDIArchivo para manejar CORS
+async function analizarMIDIArchivo(file) {
+  const loader = document.getElementById("loader");
+  loader.style.display = "block";
 
-      const formData = new FormData();
-      formData.append("file", file);
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
 
-      try {
-        const response = await fetch("https://mozairt-backend.onrender.com/analyze", {
-          method: "POST",
-          body: formData
-        });
-        const data = await response.json();
+    const response = await fetch("https://mozairt-backend.onrender.com/analyze", {
+      method: "POST",
+      body: formData,
+      headers: {
+        // Agrega estos headers si es necesario
+        'Accept': 'application/json',
+      },
+      mode: 'cors' // Asegúrate de que las credenciales sean correctas
+    });
 
-        if (data.error) {
-          addMessage("❌ Error al analizar el MIDI: " + data.error, "mozart");
-        } else {
-          addMessage(`
-            🎵 <strong>MIDI analizado (con Music21):</strong><br>
-            BPM: ${data.bpm || "?"}<br>
-            Tonalidad: ${data.key || "?"}<br>
-            Compás: ${data.time_signature || "?"}<br>
-            Compases: ${data.measures || "?"}
-          `, "mozart");
-        }
-      } catch (err) {
-        addMessage("⚠️ No se pudo analizar el archivo MIDI. Intentalo de nuevo.", "mozart");
-        console.error(err);
-      } finally {
-        loader.style.display = "none";
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    const data = await response.json();
+    // Resto del código...
+  } catch (err) {
+    console.error("Error completo:", err);
+    addMessage(`⚠️ Error al conectar con el backend: ${err.message}`, "mozart");
+  } finally {
+    loader.style.display = "none";
+  }
+}
 
     // Muestra el piano roll (usando NexusUI)
     function insertPianoRoll() {
-      const messageDiv = document.createElement("div");
-      messageDiv.classList.add("message");
-      messageDiv.innerHTML = `<div id="piano-roll-container"></div>`;
-      contentContainer.appendChild(messageDiv);
+  const messageDiv = document.createElement("div");
+  messageDiv.classList.add("message");
+  messageDiv.innerHTML = `<div id="piano-roll-container" style="width:100%; height:150px;"></div>`;
+  contentContainer.appendChild(messageDiv);
 
+  // Espera a que el DOM se actualice
+  setTimeout(() => {
+    try {
       const piano = new Nexus.Piano('#piano-roll-container', {
         size: [500, 150],
-        lowNote: 48,  // C3
-        highNote: 84  // C6
+        mode: 'button',
+        lowNote: 48,
+        highNote: 84
       });
-      setTimeout(() => {
-        contentContainer.scrollTop = contentContainer.scrollHeight;
-      }, 50);
+    } catch (e) {
+      console.error("Error al crear piano roll:", e);
     }
+  }, 100);
+}
 
     /**********************************************************
      * 6) Funciones para generación de MIDI (con la categoría elegida)
      **********************************************************/
-    async function generarMIDIConCategoria() {
-      // Verificamos que haya un MIDI cargado
-      if (!window.midiGuardado) {
-        addMessage("⚠️ Primero subí un archivo MIDI válido.", "mozart");
-        return;
-      }
-      // Verificamos que se haya elegido un tipo (bassline, chords, leads, etc.)
-      if (!selectedElement.type) {
-        addMessage("⚠️ Elegí qué querés generar: lead, bassline, acordes, etc.", "mozart");
-        return;
-      }
-      try {
-        // Cuantizamos el MIDI subido
-        const quantized = mm.sequences.quantizeNoteSequence(window.midiGuardado, 4);
-        console.log("🎼 Quantized MIDI:", quantized);
-        console.log("⏳ Enviando a Magenta...", selectedElement.type);
+     async function generarMIDIConCategoria() {
+  if (!window.midiGuardado) {
+    addMessage("⚠️ Primero subí un archivo MIDI válido.", "mozart");
+    return;
+  }
 
-        // Generamos continuación con MusicRNN
-        const continuation = await musicRNN.continueSequence(quantized, 32, 1.2);
-        console.log("✅ Magenta devolvió una continuación");
+  if (!selectedElement.type) {
+    addMessage("⚠️ Elegí qué querés generar: lead, bassline, acordes, etc.", "mozart");
+    return;
+  }
 
-        // Concatenamos la secuencia original con la generada
-        const combined = mm.sequences.concatenate([quantized, continuation]);
-        const newMidi = mm.sequenceProtoToMidi(combined);
-        const blob = new Blob([newMidi], { type: 'audio/midi' });
+  const loader = document.getElementById("loader");
+  loader.style.display = "block";
 
-        // Link de descarga local
-        const url = URL.createObjectURL(blob);
-        const localLink = `<a href="${url}" download="mozairt_output.mid" class="btn btn-outline-primary mt-3">⬇️ Descargar directo</a>`;
+  try {
+    const quantized = mm.sequences.quantizeNoteSequence(window.midiGuardado, 4);
+    const continuation = await musicRNN.continueSequence(quantized, 32, 1.2);
+    const combined = mm.sequences.concatenate([quantized, continuation]);
+    
+    // Normalizar el rango antes de convertir a MIDI
+    const normalized = normalizarMidiParaMagenta(combined);
+    const newMidi = mm.sequenceProtoToMidi(normalized);
+    
+    // Crear blob y URL para descarga
+    const blob = new Blob([newMidi], { type: 'audio/midi' });
+    const url = URL.createObjectURL(blob);
+    const downloadLink = `<a href="${url}" download="mozairt_${selectedElement.type}.mid" class="btn btn-outline-primary mt-3">⬇️ Descargar MIDI</a>`;
+    
+    addMessage(`✅ ${selectedElement.type} generado correctamente!<br>${downloadLink}`, "mozart");
 
-        // Subimos a la nube
-        const uploadForm = new FormData();
-        uploadForm.append("file", blob, "mozairt_output.mid");
-        const uploadRes = await fetch("https://mozairt-app-git-main-naials-projects.vercel.app/api/upload", {
-          method: "POST",
-          body: uploadForm
-        });
-        const isJson = uploadRes.headers.get("content-type")?.includes("application/json");
-        if (!isJson) {
-          addMessage("⚠️ El servidor no devolvió una respuesta válida (no es JSON).", "mozart");
-          return;
-        }
-        const uploadData = await uploadRes.json();
-        if (uploadRes.ok && uploadData.url) {
-          const cloudLink = `<a href="${uploadData.url}" target="_blank" class="btn btn-outline-primary mt-3">📤 Descargar desde la nube</a>`;
-          addMessage(`✅ MIDI generado como <strong>${selectedElement.type}</strong>.<br>${localLink}<br><br>${cloudLink}`, "mozart");
-        } else {
-          addMessage(`✅ MIDI generado como <strong>${selectedElement.type}</strong>.<br>${localLink}<br><br>⚠️ No se pudo subir a la nube.`, "mozart");
-        }
-      } catch (error) {
-        console.error("❌ Error exacto en continueSequence:", error);
-        addMessage("❌ Ocurrió un error al generar el nuevo MIDI. Probá de nuevo o usá otro archivo.", "mozart");
-      }
-    }
+  } catch (error) {
+    console.error("Error completo:", error);
+    addMessage(`❌ Error al generar: ${error.message}`, "mozart");
+  } finally {
+    loader.style.display = "none";
+  }
+}
 
     /*****************************************
      * 7) Funciones auxiliares para manipular notas
@@ -550,12 +539,14 @@
     }
 
     function extraerPitches(notes) {
-      if (!Array.isArray(notes)) return [];
-      return notes.flatMap(n =>
-        n.pitch !== undefined ? [n.pitch] :
-        n.pitches ? n.pitches : []
-      );
-    }
+  if (!notes || !Array.isArray(notes)) return [60]; // Default C4
+  
+  return notes.flatMap(n => {
+    if (n.pitch !== undefined) return [n.pitch];
+    if (n.pitches && Array.isArray(n.pitches)) return n.pitches;
+    return [];
+  });
+}
 
     function transponerNota(note, semitonos) {
       if (note.pitch !== undefined) {
