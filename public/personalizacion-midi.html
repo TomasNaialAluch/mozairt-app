@@ -602,48 +602,55 @@
     /**********************************************************
      * 5) Generación de MIDI con categoría seleccionada
      **********************************************************/
-    async function generarMIDIConCategoria() {
-      if (!window.midiGuardado) {
-        showError("Primero sube un archivo MIDI válido", "", "warning");
-        return;
-      }
+     async function generarMIDIConCategoria() {
+  if (!window.midiGuardado) {
+    showError("Primero sube un archivo MIDI válido", "", "warning");
+    return;
+  }
 
-      if (!selectedElement.type) {
-        showError("Elige qué quieres generar", "Selecciona lead, bassline, acordes, etc.", "warning");
-        return;
-      }
+  if (!selectedElement.type) {
+    showError("Elige qué quieres generar", "Selecciona lead, bassline, acordes, etc.", "warning");
+    return;
+  }
 
-      const loader = document.getElementById("loader");
-      loader.style.display = "block";
+  const loader = document.getElementById("loader");
+  loader.style.display = "block";
 
-      try {
-        // Verificar si MusicRNN está listo
-        if (!musicRNN || !musicRNN.isInitialized()) {
-          throw new Error("El generador de música no está listo. Espera un momento e intenta de nuevo.");
-        }
-
-        const quantized = mm.sequences.quantizeNoteSequence(window.midiGuardado, 4);
-        const continuation = await musicRNN.continueSequence(quantized, 32, 1.2);
-        const combined = mm.sequences.concatenate([quantized, continuation]);
-        
-        // Normalizar y convertir a MIDI
-        const normalized = normalizarMidiParaMagenta(combined);
-        const newMidi = mm.sequenceProtoToMidi(normalized);
-        
-        // Crear enlace de descarga
-        const blob = new Blob([newMidi], { type: 'audio/midi' });
-        const url = URL.createObjectURL(blob);
-        const downloadLink = `<a href="${url}" download="mozairt_${selectedElement.type}.mid" class="btn btn-outline-primary mt-3">⬇️ Descargar MIDI</a>`;
-        
-        addMessage(`✅ ${capitalizeFirstLetter(selectedElement.type)} generado correctamente!<br>${downloadLink}`, "mozart");
-
-      } catch (error) {
-        console.error("Error en generarMIDIConCategoria:", error);
-        showError("Error al generar el MIDI", error.message, "error");
-      } finally {
-        loader.style.display = "none";
-      }
+  try {
+    // Verificar si MusicRNN está listo
+    if (!musicRNN || !musicRNN.isInitialized()) {
+      throw new Error("El generador de música no está listo. Espera un momento e intenta de nuevo.");
     }
+
+    const quantized = mm.sequences.quantizeNoteSequence(window.midiGuardado, 4);
+    const continuation = await musicRNN.continueSequence(quantized, 32, 1.2);
+    const combined = mm.sequences.concatenate([quantized, continuation]);
+    
+    // Normalizar y convertir a MIDI
+    const normalized = normalizarMidiParaMagenta(combined);
+    const newMidi = mm.sequenceProtoToMidi(normalized);
+    
+    // Guardar el nuevo MIDI generado
+    window.midiGenerado = normalized;
+    
+    // Mostrar el piano roll con el nuevo MIDI
+    document.getElementById('piano-visualizer').style.display = 'block';
+    showNotesInPianoRoll(normalized.notes);
+    
+    // Crear enlace de descarga
+    const blob = new Blob([newMidi], { type: 'audio/midi' });
+    const url = URL.createObjectURL(blob);
+    const downloadLink = `<a href="${url}" download="mozairt_${selectedElement.type}.mid" class="btn btn-outline-primary mt-3">⬇️ Descargar MIDI</a>`;
+    
+    addMessage(`✅ ${capitalizeFirstLetter(selectedElement.type)} generado correctamente!<br>${downloadLink}`, "mozart");
+
+  } catch (error) {
+    console.error("Error en generarMIDIConCategoria:", error);
+    showError("Error al generar el MIDI", error.message, "error");
+  } finally {
+    loader.style.display = "none";
+  }
+}
 
     function capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1);
