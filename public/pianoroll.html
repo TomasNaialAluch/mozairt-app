@@ -1,218 +1,158 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Piano Roll Completo</title>
-  <!-- Bootstrap -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    :root {
-      --black-olive: #3f3f37;
-      --engineering-orange: #c03221;
-      --ash-gray: #dfe6e4;
-      --orange-peel: #ffc982;
-      --french-violet: #9662e4;
-    }
-    body {
-      background-color: var(--ash-gray);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: var(--black-olive);
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      margin: 0;
-    }
-    .navbar {
-      background-color: var(--black-olive);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    header, section {
-      padding-top: 2rem;
-      padding-bottom: 2rem;
-    }
-    .fade-in {
-      opacity: 0;
-      animation: fadeInAnimation 1.5s ease forwards;
-    }
-    @keyframes fadeInAnimation {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    .content-container {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1rem;
-      margin-bottom: 8rem;
-    }
-    footer {
-      background-color: var(--black-olive);
-      color: #fff;
-      text-align: center;
-      padding: 1rem;
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-    }
-    #piano-roll {
-      display: flex;
-      flex-direction: row;
-      border: 1px solid #ccc;
-      margin: 20px auto;
-      width: 95%;
-      height: 500px;
-      background-color: #2e2e2e;
-    }
-    #keyboard {
-      width: 40px;
-      background-color: #111;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    #keyboard .key {
-      height: 20px;
-      background-color: white;
-      border-bottom: 1px solid #ccc;
-    }
-    #keyboard .key.black {
-      background-color: black;
-      height: 12px;
-      margin-top: -10px;
-      z-index: 1;
-    }
-    #grid {
-      flex-grow: 1;
-      position: relative;
-    }
-    #grid canvas {
-      width: 100%;
-      height: 100%;
-    }
-    .note {
-      position: absolute;
-      background-color: #ffb347;
-      border-radius: 2px;
-    }
-  </style>
+  <!-- ... (mantén tu head existente) ... -->
 </head>
 <body>
-
+  <!-- Header y footer existentes -->
   <nav class="navbar navbar-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand mb-0 h1" href="index.html">MozAIrt</a>
-    </div>
+    <!-- ... (tu navbar actual) ... -->
   </nav>
 
   <div class="content-container" id="content-container">
-    <!-- Header de la página -->
     <header class="text-center fade-in">
       <h1>Piano Roll Completo</h1>
     </header>
 
-    <!-- Contenedor para el Piano Roll completo -->
+    <!-- Piano Roll Container -->
     <section class="container fade-in">
-      <div id="piano-roll">
-        <div id="keyboard"></div>
-        <div id="grid">
-          <canvas id="grid-canvas"></canvas>
-        </div>
+      <div id="piano-roll" style="position: relative; height: 600px;">
+        <!-- Teclado vertical -->
+        <div id="piano-keys" style="position: absolute; left: 0; top: 0; width: 40px; height: 100%; background: #333;"></div>
+        <!-- Cuadrícula principal -->
+        <canvas id="grid-canvas" style="position: absolute; left: 40px; top: 0; right: 0; height: 100%;"></canvas>
+        <!-- Timeline horizontal -->
+        <div id="timeline" style="position: absolute; left: 40px; top: 0; height: 30px; background: #444;"></div>
       </div>
-      <div class="roll-controls">
-        <!-- Botón para guardar los cambios y volver -->
-        <button id="save-and-return" class="btn btn-primary">Guardar y Volver</button>
+
+      <!-- Controles estilo FL Studio -->
+      <div class="row mt-3">
+        <div class="col-md-3">
+          <select id="snap-selector" class="form-select">
+            <option value="1/4">Snap 1/4</option>
+            <option value="1/8">Snap 1/8</option>
+            <option value="1/16">Snap 1/16</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <button class="btn btn-primary" onclick="togglePlayback()">▶/❚❚ Reproducir</button>
+        </div>
+        <div class="col-md-3">
+          <button class="btn btn-success" onclick="exportMIDI()">.Exportar MIDI</button>
+        </div>
       </div>
     </section>
   </div>
 
-  <footer>
-    <p>&copy; 2025 MozAIrt · Música clásica con inteligencia artificial</p>
-  </footer>
-
-  <!-- Carga de dependencias -->
+  <!-- Scripts existentes + nuevas funcionalidades -->
   <script src="https://cdn.jsdelivr.net/npm/tone@14.8.49/build/Tone.js"></script>
   <script>
-    // Variables globales
-    const gridCanvas = document.getElementById('grid-canvas');
-    const ctx = gridCanvas.getContext('2d');
-    const notes = [];
-    let selectedNote = null;
-
-    // Configuración del piano roll
-    const numOctaves = 5;
-    const startOctave = 2;
-    const rows = numOctaves * 12; // 12 notas por octava
-    const cols = 16; // 16 beats
-    const cellWidth = 50;
-    const cellHeight = 20;
-
-    // Dibujar el teclado
-    function drawKeyboard() {
-      const keyboard = document.getElementById('keyboard');
-      for (let i = rows - 1; i >= 0; i--) {
-        const keyDiv = document.createElement('div');
-        keyDiv.classList.add('key');
-        if ([1, 3, 6, 8, 10].includes(i % 12)) {
-          keyDiv.classList.add('black');
+    /*******************************
+     * Piano Roll Estilo FL Studio
+     *******************************/
+    const pianoRoll = {
+      notes: [],
+      snap: 1/4,
+      zoom: 1,
+      isPlaying: false,
+      activeTool: 'draw',
+      init() {
+        this.canvas = document.getElementById('grid-canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.drawGrid();
+        this.setupKeyboard();
+        this.setupEventListeners();
+        this.setupTimeline();
+      },
+      drawGrid() {
+        // Implementación de cuadrícula con divisiones de tiempo
+        // Basado en FL Studio's grid system [[2]]
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.strokeStyle = '#555';
+        const beats = 16;
+        const beatWidth = this.canvas.width / beats * this.zoom;
+        
+        for(let i = 0; i <= beats; i++) {
+          this.ctx.beginPath();
+          this.ctx.moveTo(i * beatWidth, 0);
+          this.ctx.lineTo(i * beatWidth, this.canvas.height);
+          this.ctx.stroke();
         }
-        keyboard.appendChild(keyDiv);
+      },
+      setupKeyboard() {
+        // Teclado vertical con 7 octavas (C2-C6) [[1]][[5]]
+        const keys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const keyboard = document.getElementById('piano-keys');
+        
+        for(let octave = 2; octave <= 6; octave++) {
+          keys.forEach((key, index) => {
+            const keyDiv = document.createElement('div');
+            keyDiv.className = `piano-key ${key.includes('#') ? 'black-key' : 'white-key'}`;
+            keyDiv.style.height = `${60/this.zoom}px`;
+            keyDiv.textContent = `${key}${octave}`;
+            keyboard.appendChild(keyDiv);
+          });
+        }
+      },
+      setupEventListeners() {
+        // Eventos de interacción con el grid [[7]]
+        this.canvas.addEventListener('mousedown', (e) => {
+          if(this.activeTool === 'draw') this.addNote(e);
+          if(this.activeTool === 'select') this.selectNotes(e);
+        });
+      },
+      addNote(e) {
+        // Lógica de creación de notas con snap [[6]]
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const beat = Math.floor(x / (this.canvas.width / 16 * this.snap)) * this.snap;
+        const note = 60 + Math.floor(y / (this.canvas.height / 60)); // C3 = 60
+        
+        this.notes.push({
+          pitch: note,
+          start: beat,
+          duration: 1,
+          velocity: 0.8
+        });
+        
+        this.drawNotes();
+      },
+      drawNotes() {
+        // Visualización de notas con diferentes colores [[7]]
+        this.notes.forEach(note => {
+          this.ctx.fillStyle = note.velocity > 0.7 ? '#ffb347' : '#888';
+          this.ctx.fillRect(
+            note.start * (this.canvas.width / 16),
+            (note.pitch - 60) * (this.canvas.height / 60),
+            note.duration * (this.canvas.width / 16),
+            this.canvas.height / 60
+          );
+        });
+      },
+      exportMIDI() {
+        // Convertir notas a formato MIDI usando Magenta.js [[2]]
+        const sequence = {
+          notes: this.notes.map(note => ({
+            pitch: note.pitch,
+            startTime: note.start,
+            endTime: note.start + note.duration,
+            velocity: note.velocity
+          }))
+        };
+        
+        const midi = mm.sequenceProtoToMidi(sequence);
+        const blob = new Blob([midi], { type: 'audio/midi' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'piano_roll.mid';
+        link.click();
       }
-    }
+    };
 
-    // Dibujar la cuadrícula
-    function drawGrid() {
-      gridCanvas.width = cols * cellWidth;
-      gridCanvas.height = rows * cellHeight;
-      ctx.strokeStyle = '#555';
-      for (let col = 0; col <= cols; col++) {
-        ctx.beginPath();
-        ctx.moveTo(col * cellWidth, 0);
-        ctx.lineTo(col * cellWidth, gridCanvas.height);
-        ctx.stroke();
-      }
-      for (let row = 0; row <= rows; row++) {
-        ctx.beginPath();
-        ctx.moveTo(0, row * cellHeight);
-        ctx.lineTo(gridCanvas.width, row * cellHeight);
-        ctx.stroke();
-      }
-    }
-
-    // Dibujar las notas
-    function drawNotes() {
-      notes.forEach(note => {
-        ctx.fillStyle = '#ffb347';
-        ctx.fillRect(note.col * cellWidth, note.row * cellHeight, note.duration * cellWidth, cellHeight);
-      });
-    }
-
-    // Manejar clics en la cuadrícula
-    gridCanvas.addEventListener('click', (event) => {
-      const rect = gridCanvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      const col = Math.floor(x / cellWidth);
-      const row = Math.floor(y / cellHeight);
-      notes.push({ row, col, duration: 1 });
-      drawAll();
-    });
-
-    // Dibujar todo
-    function drawAll() {
-      ctx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
-      drawGrid();
-      drawNotes();
-    }
-
-    // Inicializar
-    drawKeyboard();
-    drawGrid();
-
-    // Guardar y volver
-    document.getElementById('save-and-return').addEventListener('click', () => {
-      alert("Guardando notas...");
-      window.location.href = 'personalizacion-midi.html';
-    });
+    // Inicializar al cargar
+    document.addEventListener('DOMContentLoaded', () => pianoRoll.init());
   </script>
 </body>
 </html>
