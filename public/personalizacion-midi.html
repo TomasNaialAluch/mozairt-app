@@ -380,7 +380,6 @@
   addMessage(userText, "user");
   userInput.value = "";
 
-  // Mostrar mensaje de carga
   const loadingMsg = document.createElement("div");
   loadingMsg.classList.add("message");
   loadingMsg.innerHTML = `<em>MozAIrt está pensando...</em>`;
@@ -389,11 +388,19 @@
 
   try {
     const res = await fetch("https://mozairt-backend-node.onrender.com/analyze", {
-      
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: userText })
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({ prompt: userText }),
+      mode: "cors",
+      credentials: "include"
     });
+
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
 
     const data = await res.json();
     loadingMsg.remove();
@@ -401,16 +408,20 @@
   } catch (err) {
     loadingMsg.remove();
     console.error("Error en el chat:", err);
-    addMessage("⚠️ No se pudo conectar con el servidor de IA.", "mozart");
-  }
-}function initEventListeners() {
-  // Enviar mensaje con Enter
-  userInput.addEventListener("keypress", function (event) {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      sendMessage();
+    
+    // Mensaje más descriptivo para el usuario
+    let errorMsg = "⚠️ No se pudo conectar con el servidor de IA. ";
+    if (err.message.includes("Failed to fetch")) {
+      errorMsg += "Problema de conexión con el servidor.";
+    } else if (err.message.includes("HTTP error")) {
+      errorMsg += "El servidor respondió con un error.";
+    } else {
+      errorMsg += "Error desconocido.";
     }
-  });
+    
+    addMessage(errorMsg, "mozart");
+  }
+}
 
   // Listeners para botones de elementos musicales
   document.querySelectorAll('.btn-outline-primary').forEach(button => {
@@ -423,7 +434,7 @@
       }
     });
   });
-}
+
 
 
     /**********************************************************
