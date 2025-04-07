@@ -45,30 +45,6 @@
       padding: 1rem;
       margin-bottom: 8rem;
     }
-    .btn-primary {
-      background-color: var(--french-violet);
-      border-color: var(--french-violet);
-      border-radius: 2rem;
-      padding: 0.5rem 2rem;
-      transition: all 0.2s ease;
-    }
-    .btn-primary:hover {
-      background-color: #5a1fb2;
-      border-color: #5a1fb2;
-      transform: scale(1.05);
-    }
-    .btn-outline-primary {
-      color: var(--french-violet);
-      border-color: var(--french-violet);
-      border-radius: 2rem;
-      transition: all 0.2s ease;
-    }
-    .btn-outline-primary:hover,
-    .btn-outline-primary.active {
-      background-color: var(--french-violet);
-      color: white;
-      transform: scale(1.05);
-    }
     footer {
       background-color: var(--black-olive);
       color: #fff;
@@ -78,22 +54,45 @@
       bottom: 0;
       width: 100%;
     }
-    .roll-controls {
+    #piano-roll {
       display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-top: 10px;
+      flex-direction: row;
+      border: 1px solid #ccc;
+      margin: 20px auto;
+      width: 95%;
+      height: 500px;
+      background-color: #2e2e2e;
     }
-    .roll-controls button {
-      padding: 8px 16px;
-      background-color: var(--french-violet);
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
+    #keyboard {
+      width: 40px;
+      background-color: #111;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
-    .roll-controls button:hover {
-      background-color: #7d4cdb;
+    #keyboard .key {
+      height: 20px;
+      background-color: white;
+      border-bottom: 1px solid #ccc;
+    }
+    #keyboard .key.black {
+      background-color: black;
+      height: 12px;
+      margin-top: -10px;
+      z-index: 1;
+    }
+    #grid {
+      flex-grow: 1;
+      position: relative;
+    }
+    #grid canvas {
+      width: 100%;
+      height: 100%;
+    }
+    .note {
+      position: absolute;
+      background-color: #ffb347;
+      border-radius: 2px;
     }
   </style>
 </head>
@@ -113,7 +112,12 @@
 
     <!-- Contenedor para el Piano Roll completo -->
     <section class="container fade-in">
-      <div id="piano-roll-container" style="border: 1px solid #ccc; margin-bottom: 20px;"></div>
+      <div id="piano-roll">
+        <div id="keyboard"></div>
+        <div id="grid">
+          <canvas id="grid-canvas"></canvas>
+        </div>
+      </div>
       <div class="roll-controls">
         <!-- Botón para guardar los cambios y volver -->
         <button id="save-and-return" class="btn btn-primary">Guardar y Volver</button>
@@ -126,58 +130,88 @@
   </footer>
 
   <!-- Carga de dependencias -->
-  <script src="https://cdn.jsdelivr.net/npm/@magenta/music@1.23.1/dist/magentamusic.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-  <!-- Asegúrate de que este script sea la versión actualizada de tu clase PianoRoll -->
-  <script src="ruta/a/tuArchivoDePianoRoll.js" type="module"></script>
-  <script type="module">
-    import PianoRoll from 'ruta/a/tuArchivoDePianoRoll.js';
-    
-    document.addEventListener('DOMContentLoaded', () => {
-      // Recuperar el MIDI guardado en localStorage
-      const midiDataString = localStorage.getItem('midiData');
-      if (!midiDataString) {
-        alert("No se encontró un archivo MIDI guardado.");
-        return;
+  <script src="https://cdn.jsdelivr.net/npm/tone@14.8.49/build/Tone.js"></script>
+  <script>
+    // Variables globales
+    const gridCanvas = document.getElementById('grid-canvas');
+    const ctx = gridCanvas.getContext('2d');
+    const notes = [];
+    let selectedNote = null;
+
+    // Configuración del piano roll
+    const numOctaves = 5;
+    const startOctave = 2;
+    const rows = numOctaves * 12; // 12 notas por octava
+    const cols = 16; // 16 beats
+    const cellWidth = 50;
+    const cellHeight = 20;
+
+    // Dibujar el teclado
+    function drawKeyboard() {
+      const keyboard = document.getElementById('keyboard');
+      for (let i = rows - 1; i >= 0; i--) {
+        const keyDiv = document.createElement('div');
+        keyDiv.classList.add('key');
+        if ([1, 3, 6, 8, 10].includes(i % 12)) {
+          keyDiv.classList.add('black');
+        }
+        keyboard.appendChild(keyDiv);
       }
-      const midiData = JSON.parse(midiDataString);
-      
-      // Inicializar el Piano Roll completo en este contenedor
-      const fullPianoRoll = new PianoRoll('piano-roll-container', {
-        width: 1000,
-        height: 400,
-        noteColor: '#ffb347',
-        backgroundColor: '#2e2e2e',
-        gridColor: '#555',
-        octaves: 5,
-        startOctave: 2,
-        keyAreaWidth: 40,
-        timelineHeight: 20,
-        zoom: 1,
-        offsetX: 0,
-        gridDivision: 16 // Puedes cambiarlo según lo necesites
-      });
-      
-      // Cargar las notas del MIDI en el piano roll.
-      // Se asume que midiData.notes es un arreglo de objetos con propiedades: note, time, duration, velocity.
-      fullPianoRoll.clear();
-      if (midiData.notes && Array.isArray(midiData.notes)) {
-        midiData.notes.forEach(note => {
-          fullPianoRoll.addNote(note.note, note.time, note.duration, note.velocity);
-        });
-      } else {
-        alert("El formato del MIDI guardado no es válido.");
+    }
+
+    // Dibujar la cuadrícula
+    function drawGrid() {
+      gridCanvas.width = cols * cellWidth;
+      gridCanvas.height = rows * cellHeight;
+      ctx.strokeStyle = '#555';
+      for (let col = 0; col <= cols; col++) {
+        ctx.beginPath();
+        ctx.moveTo(col * cellWidth, 0);
+        ctx.lineTo(col * cellWidth, gridCanvas.height);
+        ctx.stroke();
       }
-      
-      // Configurar el botón "Guardar y Volver"
-      document.getElementById('save-and-return').addEventListener('click', () => {
-        // Exportar el MIDI actualizado del piano roll
-        const updatedMidi = fullPianoRoll.exportMIDI();
-        // Guardar el MIDI actualizado en localStorage
-        localStorage.setItem('midiData', JSON.stringify(updatedMidi));
-        // Redirigir de vuelta a la página de personalización
-        window.location.href = 'personalizacion-midi.html';
+      for (let row = 0; row <= rows; row++) {
+        ctx.beginPath();
+        ctx.moveTo(0, row * cellHeight);
+        ctx.lineTo(gridCanvas.width, row * cellHeight);
+        ctx.stroke();
+      }
+    }
+
+    // Dibujar las notas
+    function drawNotes() {
+      notes.forEach(note => {
+        ctx.fillStyle = '#ffb347';
+        ctx.fillRect(note.col * cellWidth, note.row * cellHeight, note.duration * cellWidth, cellHeight);
       });
+    }
+
+    // Manejar clics en la cuadrícula
+    gridCanvas.addEventListener('click', (event) => {
+      const rect = gridCanvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const col = Math.floor(x / cellWidth);
+      const row = Math.floor(y / cellHeight);
+      notes.push({ row, col, duration: 1 });
+      drawAll();
+    });
+
+    // Dibujar todo
+    function drawAll() {
+      ctx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
+      drawGrid();
+      drawNotes();
+    }
+
+    // Inicializar
+    drawKeyboard();
+    drawGrid();
+
+    // Guardar y volver
+    document.getElementById('save-and-return').addEventListener('click', () => {
+      alert("Guardando notas...");
+      window.location.href = 'personalizacion-midi.html';
     });
   </script>
 </body>
