@@ -295,53 +295,55 @@
     /*****************************
      * 2) Funciones de inicialización
      *****************************/
-    function initApp() {
-      try {
-        // Inicializar Magenta.js
-        musicRNN = new mm.MusicRNN('https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/basic_rnn');
-        
-        musicRNN.initialize().then(() => {
-          console.log('Magenta MusicRNN inicializado correctamente');
-        }).catch(err => {
-          console.error('Error al inicializar MusicRNN:', err);
-          showError('Error al inicializar el generador de música', 
-                   'El generador musical no pudo iniciarse. Recarga la página.', 'error');
-        });
-        
-        // Inicializar PianoRoll
-        initPianoRoll();
-        
-        initEventListeners();
-      } catch (error) {
-        console.error('Error en la inicialización:', error);
-        showError('Error al iniciar la aplicación', 
-                 'Hubo un problema al cargar las funciones necesarias. Recarga la página.', 'error');
-      }
-    }
+     function initApp() {
+  try {
+    // Inicializar Magenta.js
+    musicRNN = new mm.MusicRNN('https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/basic_rnn');
+    
+    musicRNN.initialize().then(() => {
+      console.log('Magenta MusicRNN inicializado correctamente');
+    }).catch(err => {
+      console.error('Error al inicializar MusicRNN:', err);
+      showError('Error al inicializar el generador de música', 
+                'El generador musical no pudo iniciarse. Recarga la página.', 'error');
+    });
+    
+    // Inicializar PianoRoll con las opciones actualizadas
+    pianoRoll = new PianoRoll('piano-roll-container', {
+      width: 800,
+      height: 300,
+      noteColor: '#ffb347',          // Color de nota actualizado
+      backgroundColor: '#2e2e2e',      // Fondo oscuro
+      gridColor: '#555',              // Cuadrícula oscura
+      octaves: 5,
+      startOctave: 2,
+      keyAreaWidth: 40                // Área para teclas laterales
+    });
+    
+    // Configurar controles del piano roll
+    document.getElementById('play-roll').addEventListener('click', () => {
+      Tone.start().then(() => {
+        pianoRoll.play();
+      });
+    });
+    
+    document.getElementById('stop-roll').addEventListener('click', () => {
+      pianoRoll.stop();
+    });
+    
+    document.getElementById('clear-roll').addEventListener('click', () => {
+      pianoRoll.clear();
+    });
+    
+    // Inicializar otros listeners
+    initEventListeners();
+  } catch (error) {
+    console.error('Error en la inicialización:', error);
+    showError('Error al iniciar la aplicación', 
+              'Hubo un problema al cargar las funciones necesarias. Recarga la página.', 'error');
+  }
+}
 
-    function initPianoRoll() {
-      pianoRoll = new PianoRoll('piano-roll-container', {
-        width: 800,
-        height: 200,
-        noteColor: '#9662e4',
-        octaves: 4
-      });
-      
-      // Configurar controles del piano roll
-      document.getElementById('play-roll').addEventListener('click', () => {
-        Tone.start().then(() => {
-          pianoRoll.play();
-        });
-      });
-      
-      document.getElementById('stop-roll').addEventListener('click', () => {
-        pianoRoll.stop();
-      });
-      
-      document.getElementById('clear-roll').addEventListener('click', () => {
-        pianoRoll.clear();
-      });
-    }
 
     /*****************************
      * 3) Funciones de UI/UX
