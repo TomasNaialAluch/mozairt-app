@@ -267,6 +267,14 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   
   <script>
+    // Silenciar advertencia específica de deprecated API
+    const originalWarn = console.warn;
+    console.warn = function(...args) {
+      if (!args[0].includes('ScriptProcessorNode is deprecated')) {
+        originalWarn.apply(console, args);
+      }
+    };
+
     // Esperar a que el DOM esté listo
     document.addEventListener('DOMContentLoaded', function() {
       // Inicializar la aplicación
@@ -277,7 +285,7 @@
      * 1) Variables globales
      ***********************/
     let musicRNN;
-    let pianoRoll; // Variable global para el piano roll
+    let pianoRoll;
     const contentContainer = document.getElementById("content-container");
     const userInput = document.getElementById("user-input");
     const fileInput = document.getElementById("midi-file");
@@ -302,27 +310,7 @@
         });
         
         // Inicializar PianoRoll
-        pianoRoll = new PianoRoll('piano-roll-container', {
-          width: 800,
-          height: 200,
-          noteColor: '#9662e4',
-          octaves: 4
-        });
-        
-        // Configurar controles del piano roll
-        document.getElementById('play-roll').addEventListener('click', () => {
-          Tone.start().then(() => {
-            pianoRoll.play();
-          });
-        });
-        
-        document.getElementById('stop-roll').addEventListener('click', () => {
-          pianoRoll.stop();
-        });
-        
-        document.getElementById('clear-roll').addEventListener('click', () => {
-          pianoRoll.clear();
-        });
+        initPianoRoll();
         
         initEventListeners();
       } catch (error) {
@@ -330,6 +318,30 @@
         showError('Error al iniciar la aplicación', 
                  'Hubo un problema al cargar las funciones necesarias. Recarga la página.', 'error');
       }
+    }
+
+    function initPianoRoll() {
+      pianoRoll = new PianoRoll('piano-roll-container', {
+        width: 800,
+        height: 200,
+        noteColor: '#9662e4',
+        octaves: 4
+      });
+      
+      // Configurar controles del piano roll
+      document.getElementById('play-roll').addEventListener('click', () => {
+        Tone.start().then(() => {
+          pianoRoll.play();
+        });
+      });
+      
+      document.getElementById('stop-roll').addEventListener('click', () => {
+        pianoRoll.stop();
+      });
+      
+      document.getElementById('clear-roll').addEventListener('click', () => {
+        pianoRoll.clear();
+      });
     }
 
     /*****************************
@@ -504,14 +516,8 @@
               Notas totales: ${totalNotes}
             `, "mozart");
 
-            // Visualizar notas en el piano roll
-            pianoRoll.clear();
-            quantized.notes.forEach(note => {
-              const noteName = getNoteName(note.pitch);
-              const startTime = note.quantizedStartStep;
-              const duration = note.quantizedEndStep - note.quantizedStartStep;
-              pianoRoll.addNote(noteName, startTime / 4, duration / 4);
-            });
+            // Mostrar notas en el piano roll
+            showNotesInPianoRoll(quantized.notes);
 
             resolve();
           } catch (error) {
@@ -529,11 +535,25 @@
       });
     }
 
+    function showNotesInPianoRoll(notes) {
+      try {
+        pianoRoll.clear();
+        notes.forEach(note => {
+          const noteName = getNoteName(note.pitch);
+          const startTime = note.quantizedStartStep / 4;
+          const duration = (note.quantizedEndStep - note.quantizedStartStep) / 4;
+          pianoRoll.addNote(noteName, startTime, duration);
+        });
+      } catch (error) {
+        console.error("Error al mostrar notas en piano roll:", error);
+        showError("Error al visualizar las notas", error.message, "warning");
+      }
+    }
+
     function getNoteName(pitch) {
       const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
       const octave = Math.floor(pitch / 12) - 1;
-      const noteName = noteNames[pitch % 12];
-      return noteName + octave;
+      return noteNames[pitch % 12] + octave;
     }
 
     async function analizarMIDIArchivo(file) {
@@ -760,8 +780,6 @@
         this.canvas.width = this.options.width;
         this.canvas.height = this.options.height;
         this.canvas.style.backgroundColor = this.options.backgroundColor;
-        this.canvas.style.borderRadius = '8px';
-        this.canvas.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
         this.container.appendChild(this.canvas);
         
         // Contexto de dibujo
