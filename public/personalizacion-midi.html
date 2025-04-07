@@ -6,10 +6,6 @@
   <title>Personalización del Archivo MIDI</title>
   <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- NexusUI -->
-  <script src="https://cdn.jsdelivr.net/npm/nexusui@2.1.10/dist/NexusUI.js" defer></script>
-  <!-- Magenta.js -->
-  <script src="https://cdn.jsdelivr.net/npm/@magenta/music@1.23.1" defer></script>
   <style>
     :root {
       --black-olive: #3f3f37;
@@ -147,6 +143,15 @@
       color: var(--engineering-orange);
       font-weight: bold;
     }
+    .warning-message {
+      color: #ff9800;
+      font-weight: bold;
+    }
+    .tech-details {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 0.5rem;
+    }
   </style>
 </head>
 <body>
@@ -222,15 +227,18 @@
     <p>&copy; 2025 MozAIrt · Música clásica con inteligencia artificial</p>
   </footer>
 
+  <!-- Carga de dependencias con manejo de fallos -->
+  <script src="https://cdn.jsdelivr.net/npm/@magenta/music@1.23.1/dist/magentamusic.min.js"></script>
   <script>
-    // Esperar a que todas las dependencias estén cargadas
+    // Esperar a que el DOM esté listo
     document.addEventListener('DOMContentLoaded', function() {
-      // Verificar si Magenta.js está cargado
-      if (typeof mm === 'undefined') {
-        console.error('Magenta.js no está cargado correctamente');
-        addMessage('Error: No se pudo cargar la biblioteca de música. Por favor recarga la página.', 'mozart');
-        return;
-      }
+      // Cargar NexusUI dinámicamente con manejo de errores
+      loadNexusUI().then(() => {
+        console.log('NexusUI cargado correctamente');
+      }).catch(err => {
+        showError('Advertencia: Algunas funciones visuales no estarán disponibles', 
+                 'No se pudo cargar la biblioteca NexusUI', 'warning');
+      });
       
       // Inicializar la aplicación
       initApp();
@@ -244,26 +252,50 @@
     const userInput = document.getElementById("user-input");
     const fileInput = document.getElementById("midi-file");
     const selectedElement = { type: null };
+    const isDevelopment = window.location.hostname === "localhost" || 
+                         window.location.hostname === "127.0.0.1";
 
+    /*****************************
+     * 2) Funciones de inicialización
+     *****************************/
     function initApp() {
       try {
+        // Inicializar Magenta.js
         musicRNN = new mm.MusicRNN('https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/basic_rnn');
+        
         musicRNN.initialize().then(() => {
           console.log('Magenta MusicRNN inicializado correctamente');
         }).catch(err => {
           console.error('Error al inicializar MusicRNN:', err);
-          addMessage('Error al inicializar el generador de música. Por favor intenta más tarde.', 'mozart');
+          showError('Error al inicializar el generador de música', 
+                   'El generador musical no pudo iniciarse. Recarga la página.', 'error');
         });
         
         initEventListeners();
       } catch (error) {
         console.error('Error en la inicialización:', error);
-        addMessage('Error al iniciar la aplicación. Por favor recarga la página.', 'mozart');
+        showError('Error al iniciar la aplicación', 
+                 'Hubo un problema al cargar las funciones necesarias. Recarga la página.', 'error');
       }
     }
 
+    function loadNexusUI() {
+      return new Promise((resolve, reject) => {
+        if (typeof Nexus !== 'undefined') {
+          resolve();
+          return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/nexusui@2.1.10/dist/NexusUI.js';
+        script.onload = resolve;
+        script.onerror = () => reject(new Error('Failed to load NexusUI'));
+        document.head.appendChild(script);
+      });
+    }
+
     /*****************************
-     * 2) Funciones de chat/UX
+     * 3) Funciones de UI/UX
      *****************************/
     function addMessage(text, sender = "mozart") {
       const messageDiv = document.createElement("div");
@@ -279,13 +311,31 @@
       }, 50);
     }
 
+    function showError(message, technicalDetails = "", type = "error") {
+      const messageDiv = document.createElement("div");
+      messageDiv.classList.add("message");
+      
+      const icon = type === "error" ? "❌" : "⚠️";
+      const cssClass = type === "error" ? "error-message" : "warning-message";
+      
+      let html = `<strong class="${cssClass}">${icon} ${message}</strong>`;
+      
+      if (technicalDetails && isDevelopment) {
+        html += `<div class="tech-details">${technicalDetails}</div>`;
+      }
+      
+      messageDiv.innerHTML = html;
+      contentContainer.appendChild(messageDiv);
+      contentContainer.scrollTop = contentContainer.scrollHeight;
+    }
+
     function sendMessage() {
       const userText = userInput.value.trim();
       if (!userText) return;
       addMessage(userText, "user");
       userInput.value = "";
 
-      // Respuesta simulada de MozAIrt
+      // Respuesta simulada
       setTimeout(() => {
         let response = "Entiendo... ¿Qué más necesitas?";
         if (userText.toLowerCase().includes("opciones")) {
@@ -307,11 +357,8 @@
       }, 500);
     }
 
-    /*****************************
-     * 3) Inicializar listeners
-     *****************************/
     function initEventListeners() {
-      // Para enviar con Enter
+      // Enviar mensaje con Enter
       userInput.addEventListener("keypress", function (event) {
         if (event.key === "Enter") {
           event.preventDefault();
@@ -319,7 +366,7 @@
         }
       });
 
-      // Listeners para los botones de elementos musicales
+      // Listeners para botones de elementos musicales
       document.querySelectorAll('.btn-outline-primary').forEach(button => {
         button.addEventListener('click', function() {
           document.querySelectorAll('.btn-outline-primary').forEach(btn => btn.classList.remove('active'));
@@ -337,20 +384,20 @@
      ******************************************/
     async function handleMidiUpload() {
       if (fileInput.files.length === 0) {
-        addMessage("Por favor, selecciona un archivo MIDI.", "mozart");
+        showError("Por favor, selecciona un archivo MIDI", "", "warning");
         return;
       }
       const file = fileInput.files[0];
 
-      // Validar extensión y tipo MIME
+      // Validar archivo
       if (!/\.(mid|midi)$/i.test(file.name)) {
-        addMessage("❌ Solo se aceptan archivos con extensión .MID o .MIDI", "mozart");
+        showError("Solo se aceptan archivos .MID o .MIDI", "Extensión no válida: " + file.name, "error");
         return;
       }
       
       const allowedTypes = ['audio/midi', 'audio/x-midi', 'audio/mid'];
       if (!allowedTypes.some(type => file.type.includes(type)) && file.type !== "") {
-        addMessage("❌ Formato de archivo no válido.", "mozart");
+        showError("Formato de archivo no válido", "Tipo MIME: " + file.type, "error");
         return;
       }
 
@@ -360,13 +407,16 @@
         
         // Procesar en paralelo: análisis en backend y visualización
         await Promise.all([
-          analizarMIDIArchivo(file),
+          analizarMIDIArchivo(file).catch(err => {
+            console.error("Error en análisis backend:", err);
+            return null;
+          }),
           procesarMIDILocal(file)
         ]);
         
       } catch (error) {
         console.error("Error en handleMidiUpload:", error);
-        addMessage(`❌ Error al procesar el archivo: ${error.message}`, "mozart");
+        showError("Error al procesar el archivo", error.message, "error");
       } finally {
         loader.style.display = "none";
       }
@@ -413,23 +463,24 @@
               Notas totales: ${totalNotes}
             `, "mozart");
 
-            // Insertar piano roll si NexusUI está disponible
+            // Mostrar piano roll si NexusUI está disponible
             if (typeof Nexus !== 'undefined') {
               insertPianoRoll();
             } else {
-              console.warn("NexusUI no está disponible para mostrar el piano roll");
+              console.warn("NexusUI no disponible para piano roll");
+              addMessage("ℹ️ La visualización interactiva no está disponible", "Falta la biblioteca NexusUI", "warning");
             }
 
             resolve();
           } catch (error) {
             console.error("Error al procesar MIDI localmente:", error);
-            addMessage("⚠️ Error al procesar el archivo MIDI localmente.", "mozart");
+            showError("Error al procesar el archivo MIDI", error.message, "error");
             reject(error);
           }
         };
         reader.onerror = (error) => {
           console.error("Error al leer el archivo:", error);
-          addMessage("❌ Error al leer el archivo. ¿Está corrupto?", "mozart");
+          showError("Error al leer el archivo", "¿Está corrupto?", "error");
           reject(error);
         };
         reader.readAsArrayBuffer(file);
@@ -444,26 +495,35 @@
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch("https://mozairt-backend.onrender.com/analyze", {
-          method: "POST",
-          body: formData,
-          headers: {
-            'Accept': 'application/json',
-          },
-          mode: 'cors'
-        });
+        // Intentar hasta 2 veces con delay
+        let lastError;
+        for (let i = 0; i < 2; i++) {
+          try {
+            const response = await fetch("https://mozairt-backend.onrender.com/analyze", {
+              method: "POST",
+              body: formData,
+              headers: { 'Accept': 'application/json' },
+              mode: 'cors'
+            });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => null);
-          throw new Error(errorData?.message || `HTTP error! status: ${response.status}`);
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => null);
+              throw new Error(errorData?.message || `Error del servidor (${response.status})`);
+            }
+
+            const data = await response.json();
+            addMessage(`✅ Análisis avanzado completado: ${data.message || "Archivo procesado"}`, "mozart");
+            return data;
+          } catch (err) {
+            lastError = err;
+            if (i < 1) await new Promise(resolve => setTimeout(resolve, 1000));
+          }
         }
-
-        const data = await response.json();
-        addMessage(`✅ Análisis completado: ${data.message || "Archivo procesado en el servidor"}`, "mozart");
-        return data;
+        
+        throw lastError;
       } catch (err) {
         console.error("Error en analizarMIDIArchivo:", err);
-        addMessage("⚠️ El servidor de análisis no está disponible. Continuando con procesamiento local...", "mozart");
+        addMessage("⚠️ El servidor de análisis avanzado no está disponible. Usando análisis básico...", "mozart");
         return null;
       } finally {
         loader.style.display = "none";
@@ -476,13 +536,8 @@
       messageDiv.innerHTML = `<div id="piano-roll-container"></div>`;
       contentContainer.appendChild(messageDiv);
 
-      // Esperar a que el DOM se actualice
       setTimeout(() => {
         try {
-          if (typeof Nexus === 'undefined') {
-            throw new Error("NexusUI no está disponible");
-          }
-          
           const piano = new Nexus.Piano('#piano-roll-container', {
             size: [500, 150],
             mode: 'button',
@@ -490,7 +545,7 @@
             highNote: 84
           });
           
-          // Opcional: Resaltar notas del MIDI cargado
+          // Resaltar notas del MIDI cargado
           if (window.midiGuardado?.notes) {
             window.midiGuardado.notes.forEach(note => {
               if (note.pitch >= 48 && note.pitch <= 84) {
@@ -500,22 +555,22 @@
           }
         } catch (e) {
           console.error("Error al crear piano roll:", e);
-          messageDiv.innerHTML += `<p class="error-message">No se pudo cargar el visualizador de piano</p>`;
+          messageDiv.innerHTML += `<p class="warning-message">No se pudo cargar el visualizador de piano</p>`;
         }
       }, 100);
     }
 
     /**********************************************************
-     * 5) Funciones para generación de MIDI (con la categoría elegida)
+     * 5) Generación de MIDI con categoría seleccionada
      **********************************************************/
     async function generarMIDIConCategoria() {
       if (!window.midiGuardado) {
-        addMessage("⚠️ Primero sube un archivo MIDI válido.", "mozart");
+        showError("Primero sube un archivo MIDI válido", "", "warning");
         return;
       }
 
       if (!selectedElement.type) {
-        addMessage("⚠️ Elige qué quieres generar: lead, bassline, acordes, etc.", "mozart");
+        showError("Elige qué quieres generar", "Selecciona lead, bassline, acordes, etc.", "warning");
         return;
       }
 
@@ -523,20 +578,20 @@
       loader.style.display = "block";
 
       try {
-        // Verificar si MusicRNN está inicializado
+        // Verificar si MusicRNN está listo
         if (!musicRNN || !musicRNN.isInitialized()) {
-          throw new Error("El generador de música no está listo. Por favor espera e intenta de nuevo.");
+          throw new Error("El generador de música no está listo. Espera un momento e intenta de nuevo.");
         }
 
         const quantized = mm.sequences.quantizeNoteSequence(window.midiGuardado, 4);
         const continuation = await musicRNN.continueSequence(quantized, 32, 1.2);
         const combined = mm.sequences.concatenate([quantized, continuation]);
         
-        // Normalizar el rango antes de convertir a MIDI
+        // Normalizar y convertir a MIDI
         const normalized = normalizarMidiParaMagenta(combined);
         const newMidi = mm.sequenceProtoToMidi(normalized);
         
-        // Crear blob y URL para descarga
+        // Crear enlace de descarga
         const blob = new Blob([newMidi], { type: 'audio/midi' });
         const url = URL.createObjectURL(blob);
         const downloadLink = `<a href="${url}" download="mozairt_${selectedElement.type}.mid" class="btn btn-outline-primary mt-3">⬇️ Descargar MIDI</a>`;
@@ -545,7 +600,7 @@
 
       } catch (error) {
         console.error("Error en generarMIDIConCategoria:", error);
-        addMessage(`❌ Error al generar: ${error.message}`, "mozart");
+        showError("Error al generar el MIDI", error.message, "error");
       } finally {
         loader.style.display = "none";
       }
