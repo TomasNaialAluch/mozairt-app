@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Personalización del Archivo MIDI</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/nexusui/2.0.4/NexusUI.min.js"></script>
+
   <style>
     :root {
       --black-olive: #3f3f37;
@@ -330,95 +332,120 @@
 
   const musicRNN = new mm.MusicRNN('https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/basic_rnn');
   musicRNN.initialize();
+
   async function handleMidiUpload() {
-  const fileInput = document.getElementById("midi-file");
-  if (fileInput.files.length === 0) {
-    addMessage("Por favor, seleccioná un archivo MIDI.", "mozart");
-    return;
-  }
+    const fileInput = document.getElementById("midi-file");
+    if (fileInput.files.length === 0) {
+      addMessage("Por favor, seleccioná un archivo MIDI.", "mozart");
+      return;
+    }
 
-  const file = fileInput.files[0];
-  analizarMIDIArchivo(file);
+    const file = fileInput.files[0];
+    analizarMIDIArchivo(file);
 
-  // Validar extensión del archivo
-  if (!/\.(mid|midi)$/i.test(file.name)) {
-    addMessage("❌ Solo se aceptan archivos con extensión .MID o .MIDI", "mozart");
-    return;
-  }
+    // Validar extensión del archivo
+    if (!/\.(mid|midi)$/i.test(file.name)) {
+      addMessage("❌ Solo se aceptan archivos con extensión .MID o .MIDI", "mozart");
+      return;
+    }
 
-  // Validar tipo MIME
-  const allowedTypes = ['audio/midi', 'audio/x-midi', 'audio/mid'];
-  if (!allowedTypes.some(type => file.type.includes(type))) {
-    addMessage("❌ Formato de archivo no válido.", "mozart");
-    return;
-  }
+    // Validar tipo MIME
+    const allowedTypes = ['audio/midi', 'audio/x-midi', 'audio/mid'];
+    if (!allowedTypes.some(type => file.type.includes(type))) {
+      addMessage("❌ Formato de archivo no válido.", "mozart");
+      return;
+    }
 
-  const loader = document.getElementById("loader");
+    const loader = document.getElementById("loader");
 
-  try {
-    loader.style.display = "block";
-    const reader = new FileReader();
+    try {
+      loader.style.display = "block";
+      const reader = new FileReader();
 
-    reader.onload = async function (e) {
-      try {
-        const midiData = new Uint8Array(e.target.result);
-        let midi = mm.midiToSequenceProto(midiData);
-        const pitchInfo = extraerPitches(midi);
-const minPitch = Math.min(...pitchInfo);
-const maxPitch = Math.max(...pitchInfo);
+      reader.onload = async function (e) {
+        try {
+          const midiData = new Uint8Array(e.target.result);
+          let midi = mm.midiToSequenceProto(midiData);
+          const pitchInfo = extraerPitches(midi);
+          const minPitch = Math.min(...pitchInfo);
+          const maxPitch = Math.max(...pitchInfo);
 
-let mensaje = "✅ Archivo MIDI ajustado para trabajar con Magenta.<br>";
-if (minPitch < 48) {
-  const subidas = Math.ceil((48 - minPitch) / 12);
-  mensaje += `🔼 Subido ${subidas} octava${subidas > 1 ? "s" : ""} para empezar desde C3.<br>`;
-}
-if (maxPitch > 84) {
-  mensaje += "🔽 Bajado 1 octava para evitar notas superiores a C6.<br>";
-}
-if (pitchInfo.some(p => p < 36 || p > 84)) {
-  mensaje += "🔁 Algunas notas individuales fueron ajustadas para quedar en el rango C2–C6.<br>";
-}
+          let mensaje = "✅ Archivo MIDI ajustado para trabajar con Magenta.<br>";
+          if (minPitch < 48) {
+            const subidas = Math.ceil((48 - minPitch) / 12);
+            mensaje += `🔼 Subido ${subidas} octava${subidas > 1 ? "s" : ""} para empezar desde C3.<br>`;
+          }
+          if (maxPitch > 84) {
+            mensaje += "🔽 Bajado 1 octava para evitar notas superiores a C6.<br>";
+          }
+          if (pitchInfo.some(p => p < 36 || p > 84)) {
+            mensaje += "🔁 Algunas notas individuales fueron ajustadas para quedar en el rango C2–C6.<br>";
+          }
 
-addMessage(mensaje, "mozart");
+          addMessage(mensaje, "mozart");
+          window.midiGuardado = midi;
 
-        window.midiGuardado = midi;
+          // Verificar cantidad de pistas
+          const numTracks = midi.tracks?.length || 1;
+          if (numTracks > 1) {
+            addMessage(`⚠️ Tu archivo MIDI tiene ${numTracks} pistas. Se recomienda trabajar con una sola pista para evitar problemas de compatibilidad.`, "mozart");
+          }
 
-        // Verificar cantidad de pistas
-        const numTracks = midi.tracks?.length || 1;
-        if (numTracks > 1) {
-          addMessage(`⚠️ Tu archivo MIDI tiene ${numTracks} pistas. Se recomienda trabajar con una sola pista para evitar problemas de compatibilidad.`, "mozart");
+          // Procesar y mostrar feedback
+          const quantized = mm.sequences.quantizeNoteSequence(midi, 4);
+          const bpm = quantized.tempos?.[0]?.qpm || "Desconocido";
+          const key = quantized.keySignatures?.[0]?.key || "Sin info";
+          const totalNotes = quantized.notes.length;
+          addMessage(`
+            <strong>🎵 Información del MIDI:</strong><br>
+            BPM: ${bpm}<br>
+            Tonalidad: ${key}<br>
+            Notas totales: ${totalNotes}
+          `, "mozart");
+
+          // Insertamos el piano roll después de procesar el MIDI:
+          insertPianoRoll();
+
+        } catch (procError) {
+          addMessage("⚠️ Error al procesar el archivo MIDI.", "mozart");
+          console.error("Error en procesamiento:", procError);
+        } finally {
+          loader.style.display = "none";
         }
+      };
 
-        // Procesar y mostrar feedback
-        const quantized = mm.sequences.quantizeNoteSequence(midi, 4);
-        const bpm = quantized.tempos?.[0]?.qpm || "Desconocido";
-        const key = quantized.keySignatures?.[0]?.key || "Sin info";
-        const totalNotes = quantized.notes.length;
-        addMessage(`
-          <strong>🎵 Información del MIDI:</strong><br>
-          BPM: ${bpm}<br>
-          Tonalidad: ${key}<br>
-          Notas totales: ${totalNotes}
-        `, "mozart");
+      reader.readAsArrayBuffer(file);
 
-      } catch (procError) {
-        addMessage("⚠️ Error al procesar el archivo MIDI.", "mozart");
-        console.error("Error en procesamiento:", procError);
-      } finally {
-        loader.style.display = "none";
-      }
-    };
-
-    reader.readAsArrayBuffer(file);
-
-  } catch (error) {
-    addMessage("⚠️ Ocurrió un error inesperado.", "mozart");
-    console.error("Error inesperado:", error);
-    loader.style.display = "none";
+    } catch (error) {
+      addMessage("⚠️ Ocurrió un error inesperado.", "mozart");
+      console.error("Error inesperado:", error);
+      loader.style.display = "none";
+    }
   }
-}
 
+  // Función para insertar el piano roll en el flujo de mensajes
+  function insertPianoRoll() {
+    // Crear un div para el piano roll
+    const messageDiv = document.createElement("div");
+    messageDiv.classList.add("message");
+    // Agregamos un contenedor específico para Nexus UI
+    messageDiv.innerHTML = `<div id="piano-roll-container"></div>`;
+    contentContainer.appendChild(messageDiv);
+
+    // Inicializar el piano de Nexus UI en el contenedor recién agregado
+    const piano = new Nexus.Piano('#piano-roll-container', {
+      size: [500, 150],
+      lowNote: 48,   // C3
+      highNote: 84   // C6
+    });
+
+    // Ajustar el scroll del contenedor para ver el nuevo mensaje
+    setTimeout(() => {
+      contentContainer.scrollTop = contentContainer.scrollHeight;
+    }, 50);
+  }
 </script>
+
 <script>
 // Genera un archivo MIDI desde cero usando Magenta, basado en el género elegido por el usuario
 async function generarMIDIDesdeGenero() {
@@ -638,5 +665,28 @@ async function analizarMIDIArchivo(file) {
 }
 
 </script>
+<script>
+  function insertPianoRoll() {
+    // Crear un div para el piano roll
+    const messageDiv = document.createElement("div");
+    messageDiv.classList.add("message");
+    // Agregamos un contenedor específico para Nexus UI
+    messageDiv.innerHTML = `<div id="piano-roll-container"></div>`;
+    contentContainer.appendChild(messageDiv);
+
+    // Inicializar el piano de Nexus UI en el contenedor recién agregado
+    const piano = new Nexus.Piano('#piano-roll-container', {
+      size: [500, 150],
+      lowNote: 48,   // C3
+      highNote: 84   // C6
+    });
+
+    // Ajustar el scroll del contenedor para ver el nuevo mensaje
+    setTimeout(() => {
+      contentContainer.scrollTop = contentContainer.scrollHeight;
+    }, 50);
+  }
+</script>
+
 </body>
 </html>
