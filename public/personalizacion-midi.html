@@ -192,16 +192,7 @@
           <button class="btn btn-outline-primary mt-3" onclick="handleMidiUpload()">Cargar archivo MIDI</button>
         </div>
       </div>
-      <div id="piano-roll-toolbar" style="text-align:center; margin-bottom:10px;">
-        <button onclick="pianoRoll.setZoomLevel(1)">Zoom 1x</button>
-        <button onclick="pianoRoll.setZoomLevel(2)">Zoom 2x</button>
-        <button onclick="pianoRoll.setZoomLevel(4)">Zoom 4x</button>
-        <button onclick="pianoRoll.setGridDivision(1)">Grid 1/1</button>
-        <button onclick="pianoRoll.setGridDivision(4)">Grid 1/4</button>
-        <button onclick="pianoRoll.setGridDivision(16)">Grid 1/16</button>
-        <button onclick="pianoRoll.setGridDivision(32)">Grid 1/32</button>
-        <button onclick="pianoRoll.toggleNoteMode()">Toggle Add Note Mode</button>
-      </div>
+     
       <!-- Piano Roll Container -->
       <div id="piano-visualizer" style="display: none;">
         <div class="message">
@@ -211,6 +202,7 @@
             <button id="play-roll">Reproducir</button>
             <button id="stop-roll">Detener</button>
             <button id="clear-roll">Limpiar</button>
+            <button id="open-full-piano">Abrir Piano Roll Completo</button>
           </div>
         </div>
       </div>
@@ -943,5 +935,21 @@
       }
     }
   </script>
+  <script>
+    // Listener para el botón que abre la página de Piano Roll completo
+    document.getElementById('open-full-piano').addEventListener('click', () => {
+      // Verificar si hay MIDI cargado (puedes elegir el que necesites)
+      const midiData = window.midiGenerado || window.midiGuardado;
+      if (!midiData) {
+        alert("Primero debes cargar o generar un archivo MIDI.");
+        return;
+      }
+      // Guardar el MIDI en localStorage (convertido a JSON)
+      localStorage.setItem('midiData', JSON.stringify(midiData));
+      // Redirigir a la nueva página
+      window.location.href = 'pianoroll.html';
+    });
+  </script>
+  
 </body>
 </html>
