@@ -555,7 +555,7 @@ async function generarMIDIConCategoria() {
 
   try {
     const quantized = mm.sequences.quantizeNoteSequence(window.midiGuardado, 4);
-    console.log("🎹 Quantized MIDI:", quantized);
+    console.log("🎼 Quantized MIDI:", quantized);
     console.log("⏳ Enviando a Magenta...", selectedElement.type);
 
     const continuation = await musicRNN.continueSequence(quantized, 32, 1.2);
@@ -571,8 +571,7 @@ async function generarMIDIConCategoria() {
     const uploadForm = new FormData();
     uploadForm.append("file", blob, "mozairt_output.mid");
 
-    const uploadRes = await fetch("https://mozairt-app-git-main-naials-projects.vercel.app/api/upload", 
-      {
+    const uploadRes = await fetch("https://mozairt-app-git-main-naials-projects.vercel.app/api/upload", {
       method: "POST",
       body: uploadForm
     });
@@ -590,6 +589,7 @@ async function generarMIDIConCategoria() {
     addMessage("❌ Ocurrió un error al generar el nuevo MIDI. Probá de nuevo o usá otro archivo.", "mozart");
   }
 }
+
 
 
 async function analizarMIDIArchivo(file) {
