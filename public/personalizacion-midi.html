@@ -532,11 +532,13 @@ async function generarMIDIDesdeGenero() {
   }
   
   function extraerPitches(notes) {
-    return notes.flatMap(n =>
-      n.pitch !== undefined ? [n.pitch] :
-      n.pitches ? n.pitches : []
-    );
-  }
+  if (!Array.isArray(notes)) return [];
+  return notes.flatMap(n =>
+    n.pitch !== undefined ? [n.pitch] :
+    n.pitches ? n.pitches : []
+  );
+}
+
   </script>
   
 <script>
