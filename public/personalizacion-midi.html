@@ -362,7 +362,25 @@
     reader.onload = async function (e) {
       try {
         const midiData = new Uint8Array(e.target.result);
-        const midi = mm.midiToSequenceProto(midiData);
+        let midi = mm.midiToSequenceProto(midiData);
+        const pitchInfo = extraerPitches(midi);
+const minPitch = Math.min(...pitchInfo);
+const maxPitch = Math.max(...pitchInfo);
+
+let mensaje = "✅ Archivo MIDI ajustado para trabajar con Magenta.<br>";
+if (minPitch < 48) {
+  const subidas = Math.ceil((48 - minPitch) / 12);
+  mensaje += `🔼 Subido ${subidas} octava${subidas > 1 ? "s" : ""} para empezar desde C3.<br>`;
+}
+if (maxPitch > 84) {
+  mensaje += "🔽 Bajado 1 octava para evitar notas superiores a C6.<br>";
+}
+if (pitchInfo.some(p => p < 36 || p > 84)) {
+  mensaje += "🔁 Algunas notas individuales fueron ajustadas para quedar en el rango C2–C6.<br>";
+}
+
+addMessage(mensaje, "mozart");
+
         window.midiGuardado = midi;
 
         // Verificar cantidad de pistas
@@ -435,6 +453,92 @@ async function generarMIDIDesdeGenero() {
   }
 }
 </script>
+<script>
+  function normalizarMidiParaMagenta(midi) {
+    if (!midi.notes || midi.notes.length === 0) return midi;
+  
+    const allPitches = midi.notes.flatMap(note =>
+      note.pitch !== undefined ? [note.pitch] :
+      note.pitches ? note.pitches : []
+    );
+  
+    const minPitch = Math.min(...allPitches);
+    const maxPitch = Math.max(...allPitches);
+  
+    // 1️⃣ Transponer hacia arriba hasta C3 si hace falta
+    let octavasArriba = 0;
+    if (minPitch < 48) {
+      octavasArriba = Math.ceil((48 - minPitch) / 12);
+    }
+  
+    const transposed = {
+      ...midi,
+      notes: midi.notes.map(note => transponerNota(note, octavasArriba * 12))
+    };
+  
+    const newMax = Math.max(...extraerPitches(transposed.notes));
+  
+    // 2️⃣ Si el nuevo pitch más alto es ≤ C6 (84), lo mandamos
+    if (newMax <= 84) return transposed;
+  
+    // 3️⃣ Si no, bajamos todo 1 octava y revisamos
+    const bajado = {
+      ...transposed,
+      notes: transposed.notes.map(note => transponerNota(note, -12))
+    };
+  
+    const finalMax = Math.max(...extraerPitches(bajado.notes));
+    const finalMin = Math.min(...extraerPitches(bajado.notes));
+  
+    // 4️⃣ Si estamos en rango C2-C6, listo
+    if (finalMin >= 36 && finalMax <= 84) return bajado;
+  
+    // 5️⃣ Si no, bajamos solo las notas que se pasan
+    const ajustado = {
+      ...bajado,
+      notes: bajado.notes.map(note => ajustarNota(note))
+    };
+  
+    return ajustado;
+  }
+  
+  function transponerNota(note, semitonos) {
+    if (note.pitch !== undefined) {
+      return { ...note, pitch: note.pitch + semitonos };
+    } else if (note.pitches) {
+      return {
+        ...note,
+        pitches: note.pitches.map(p => p + semitonos)
+      };
+    }
+    return note;
+  }
+  
+  function ajustarNota(note) {
+    if (note.pitch !== undefined) {
+      let pitch = note.pitch;
+      while (pitch > 84) pitch -= 12;
+      while (pitch < 36) pitch += 12;
+      return { ...note, pitch };
+    } else if (note.pitches) {
+      const adjusted = note.pitches.map(p => {
+        while (p > 84) p -= 12;
+        while (p < 36) p += 12;
+        return p;
+      });
+      return { ...note, pitches: adjusted };
+    }
+    return note;
+  }
+  
+  function extraerPitches(notes) {
+    return notes.flatMap(n =>
+      n.pitch !== undefined ? [n.pitch] :
+      n.pitches ? n.pitches : []
+    );
+  }
+  </script>
+  
 <script>
 async function generarMIDIConCategoria() {
   if (!window.midiGuardado) {
