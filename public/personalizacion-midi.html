@@ -277,7 +277,6 @@
 
     // Esperar a que el DOM esté listo
     document.addEventListener('DOMContentLoaded', function() {
-      // Inicializar la aplicación
       initApp();
     });
 
@@ -429,9 +428,9 @@
       });
     }
 
-    /******************************************
+    /**********************************************************
      * 4) Funciones para procesamiento de MIDI
-     ******************************************/
+     **********************************************************/
     async function handleMidiUpload() {
       if (fileInput.files.length === 0) {
         showError("Por favor, selecciona un archivo MIDI", "", "warning");
@@ -602,55 +601,54 @@
     /**********************************************************
      * 5) Generación de MIDI con categoría seleccionada
      **********************************************************/
-     async function generarMIDIConCategoria() {
-  if (!window.midiGuardado) {
-    showError("Primero sube un archivo MIDI válido", "", "warning");
-    return;
-  }
+    async function generarMIDIConCategoria() {
+      if (!window.midiGuardado) {
+        showError("Primero sube un archivo MIDI válido", "", "warning");
+        return;
+      }
 
-  if (!selectedElement.type) {
-    showError("Elige qué quieres generar", "Selecciona lead, bassline, acordes, etc.", "warning");
-    return;
-  }
+      if (!selectedElement.type) {
+        showError("Elige qué quieres generar", "Selecciona lead, bassline, acordes, etc.", "warning");
+        return;
+      }
 
-  const loader = document.getElementById("loader");
-  loader.style.display = "block";
+      const loader = document.getElementById("loader");
+      loader.style.display = "block";
 
-  try {
-    // Verificar si MusicRNN está listo
-    if (!musicRNN || !musicRNN.isInitialized()) {
-      throw new Error("El generador de música no está listo. Espera un momento e intenta de nuevo.");
+      try {
+        // Verificar si MusicRNN está listo
+        if (!musicRNN || !musicRNN.isInitialized()) {
+          throw new Error("El generador de música no está listo. Espera un momento e intenta de nuevo.");
+        }
+
+        const quantized = mm.sequences.quantizeNoteSequence(window.midiGuardado, 4);
+        const continuation = await musicRNN.continueSequence(quantized, 32, 1.2);
+        const combined = mm.sequences.concatenate([quantized, continuation]);
+        
+        // Normalizar y convertir a MIDI
+        const normalized = normalizarMidiParaMagenta(combined);
+        const newMidi = mm.sequenceProtoToMidi(normalized);
+        
+        // Guardar el nuevo MIDI generado
+        window.midiGenerado = normalized;
+        
+        // Crear enlace de descarga
+        const blob = new Blob([newMidi], { type: 'audio/midi' });
+        const url = URL.createObjectURL(blob);
+        const downloadLink = `<a href="${url}" download="mozairt_${selectedElement.type}.mid" class="btn btn-outline-primary mt-3">⬇️ Descargar MIDI</a>`;
+        
+        // Agregar botón para mostrar en piano roll
+        const mostrarButton = `<button class="btn btn-outline-primary mt-3" onclick="mostrarEnPianoRoll()">Mostrar en Piano Roll</button>`;
+        
+        addMessage(`✅ ${capitalizeFirstLetter(selectedElement.type)} generado correctamente!<br>${downloadLink}<br>${mostrarButton}`, "mozart");
+
+      } catch (error) {
+        console.error("Error en generarMIDIConCategoria:", error);
+        showError("Error al generar el MIDI", error.message, "error");
+      } finally {
+        loader.style.display = "none";
+      }
     }
-
-    const quantized = mm.sequences.quantizeNoteSequence(window.midiGuardado, 4);
-    const continuation = await musicRNN.continueSequence(quantized, 32, 1.2);
-    const combined = mm.sequences.concatenate([quantized, continuation]);
-    
-    // Normalizar y convertir a MIDI
-    const normalized = normalizarMidiParaMagenta(combined);
-    const newMidi = mm.sequenceProtoToMidi(normalized);
-    
-    // Guardar el nuevo MIDI generado
-    window.midiGenerado = normalized;
-    
-    // Mostrar el piano roll con el nuevo MIDI
-    document.getElementById('piano-visualizer').style.display = 'block';
-    showNotesInPianoRoll(normalized.notes);
-    
-    // Crear enlace de descarga
-    const blob = new Blob([newMidi], { type: 'audio/midi' });
-    const url = URL.createObjectURL(blob);
-    const downloadLink = `<a href="${url}" download="mozairt_${selectedElement.type}.mid" class="btn btn-outline-primary mt-3">⬇️ Descargar MIDI</a>`;
-    
-    addMessage(`✅ ${capitalizeFirstLetter(selectedElement.type)} generado correctamente!<br>${downloadLink}`, "mozart");
-
-  } catch (error) {
-    console.error("Error en generarMIDIConCategoria:", error);
-    showError("Error al generar el MIDI", error.message, "error");
-  } finally {
-    loader.style.display = "none";
-  }
-}
 
     function capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1);
@@ -745,7 +743,24 @@
     }
 
     /*****************************************
-     * 7) Clase PianoRoll (integrada directamente)
+     * 7) Función para mostrar el MIDI generado en el piano roll
+     *****************************************/
+    function mostrarEnPianoRoll() {
+      if (!window.midiGenerado) {
+        showError("No hay MIDI generado para mostrar.", "", "warning");
+        return;
+      }
+      
+      // Actualizar el piano roll con las notas del MIDI modificado
+      document.getElementById('piano-visualizer').style.display = 'block';
+      showNotesInPianoRoll(window.midiGenerado.notes);
+      
+      // Desplazar la vista hasta el piano roll
+      document.getElementById('piano-roll-container').scrollIntoView({ behavior: "smooth" });
+    }
+
+    /*****************************************
+     * 8) Clase PianoRoll (integrada directamente)
      *****************************************/
     class PianoRoll {
       constructor(containerId, options = {}) {
@@ -812,7 +827,7 @@
         
         // Dibujar líneas verticales (tiempo)
         for (let i = 0; i <= 16; i++) {
-          const lineWidth = i % 4 === 0 ? 2 : 1; // Líneas más gruesas cada 4 beats
+          const lineWidth = i % 4 === 0 ? 2 : 1;
           this.ctx.lineWidth = lineWidth;
           this.ctx.beginPath();
           this.ctx.moveTo(i * this.beatWidth, 0);
@@ -824,7 +839,7 @@
       setupEvents() {
         // Evento para añadir notas al hacer clic
         this.canvas.addEventListener('click', (e) => {
-          if (this.isPlaying) return; // No permitir cambios durante la reproducción
+          if (this.isPlaying) return;
           
           const rect = this.canvas.getBoundingClientRect();
           const x = e.clientX - rect.left;
@@ -856,7 +871,7 @@
           note, 
           time, 
           duration,
-          velocity: 0.8 // Velocidad predeterminada
+          velocity: 0.8
         });
       }
 
@@ -885,7 +900,6 @@
           return;
         }
 
-        // Configurar Tone.js si no está inicializado
         if (!window.Tone) {
           console.error('Tone.js no está cargado');
           return;
@@ -895,13 +909,11 @@
         Tone.Transport.cancel();
         Tone.Transport.bpm.value = 120;
         
-        // Crear sintetizador si no existe
         if (!this.synth) {
           this.synth = new Tone.PolySynth(Tone.Synth).toDestination();
           this.synth.volume.value = -8;
         }
 
-        // Programar notas
         this.activeNotes.forEach(noteObj => {
           Tone.Transport.schedule(time => {
             this.synth.triggerAttackRelease(
@@ -910,7 +922,7 @@
               time,
               noteObj.velocity
             );
-          }, noteObj.time * 0.5); // 0.5 segundos por beat
+          }, noteObj.time * 0.5);
         });
         
         Tone.Transport.start();
