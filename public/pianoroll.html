@@ -112,15 +112,9 @@
   </footer>
 
   <!-- Dependencias -->
-  <script src="https://cdn.jsdelivr.net/npm/@magenta/music@1.23.1/dist/magentamusic.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/nexusui@2.0.8/dist/NexusUI.js"></script>
-  <!-- Importa tu clase PianoRoll avanzada; ajusta la ruta según tu proyecto -->
   <script type="module">
-    import PianoRoll from './tuArchivoDePianoRoll.js';
-
-    let fullPianoRoll;
-
+    import PianoRoll from './PianoRoll.js'; // Asegúrate de que la ruta sea correcta
+  
     document.addEventListener('DOMContentLoaded', () => {
       // Recuperar el MIDI guardado en localStorage
       const midiDataString = localStorage.getItem('midiData');
@@ -129,9 +123,9 @@
         return;
       }
       const midiData = JSON.parse(midiDataString);
-
-      // Inicializar el piano roll completo
-      fullPianoRoll = new PianoRoll('piano-roll-container', {
+  
+      // Inicializar el piano roll completo y asignarlo al objeto global
+      const fullPianoRoll = new PianoRoll('piano-roll-container', {
         width: 1000,
         height: 400,
         noteColor: '#ffb347',
@@ -143,11 +137,11 @@
         timelineHeight: 20,
         zoom: 1,
         offsetX: 0,
-        gridDivision: 16,
-        // Puedes agregar ghostNotes si lo deseas: ghostNotes: [...]
+        gridDivision: 16
       });
-
-      // Cargar las notas del MIDI (se asume que midiData.notes es un array de objetos con propiedades: note, time, duration, velocity)
+      window.fullPianoRoll = fullPianoRoll; // Esto hace que esté disponible globalmente
+  
+      // Cargar las notas del MIDI
       fullPianoRoll.clear();
       if (midiData.notes && Array.isArray(midiData.notes)) {
         midiData.notes.forEach(note => {
@@ -156,14 +150,14 @@
       } else {
         alert("El formato del MIDI guardado no es válido.");
       }
-
+  
       // Configurar el botón "Guardar y Volver"
       document.getElementById('save-and-return').addEventListener('click', () => {
         const updatedMidi = fullPianoRoll.exportMIDI();
         localStorage.setItem('midiData', JSON.stringify(updatedMidi));
         window.location.href = 'personalizacion-midi.html';
       });
-
+      
       // Crear un Dial de NexusUI para controlar el zoom
       const zoomDial = new Nexus.Dial('#nexus-controls', {
         size: [75, 75],
@@ -177,5 +171,6 @@
       });
     });
   </script>
+  
 </body>
 </html>
