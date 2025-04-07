@@ -576,7 +576,15 @@ async function generarMIDIConCategoria() {
       body: uploadForm
     });
 
-    const uploadData = await uploadRes.json();
+    const isJson = uploadRes.headers.get("content-type")?.includes("application/json");
+
+if (!isJson) {
+  addMessage("⚠️ El servidor no devolvió una respuesta válida (no es JSON).", "mozart");
+  return;
+}
+
+const uploadData = await uploadRes.json();
+
 
     if (uploadRes.ok && uploadData.url) {
       const cloudLink = `<a href="${uploadData.url}" target="_blank" class="btn btn-outline-primary mt-3">📤 Descargar desde la nube</a>`;
