@@ -1,158 +1,55 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!-- ... (mantén tu head existente) ... -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MozAIrt</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --black-olive: #3f3f37;
+    }
+    body {
+      background-color: var(--ash-gray);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--black-olive);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .navbar {
+      background-color: var(--black-olive);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    footer {
+      background-color: var(--black-olive);
+      color: #fff;
+      text-align: center;
+      padding: 1rem;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+  </style>
 </head>
 <body>
-  <!-- Header y footer existentes -->
+  <!-- Header -->
   <nav class="navbar navbar-dark">
-    <!-- ... (tu navbar actual) ... -->
+    <div class="container-fluid">
+      <a class="navbar-brand mb-0 h1" href="index.html">MozAIrt</a>
+    </div>
   </nav>
 
-  <div class="content-container" id="content-container">
-    <header class="text-center fade-in">
-      <h1>Piano Roll Completo</h1>
-    </header>
+  <!-- Contenedor vacío (solo para mantener el espacio) -->
+  <div style="flex: 1;"></div>
 
-    <!-- Piano Roll Container -->
-    <section class="container fade-in">
-      <div id="piano-roll" style="position: relative; height: 600px;">
-        <!-- Teclado vertical -->
-        <div id="piano-keys" style="position: absolute; left: 0; top: 0; width: 40px; height: 100%; background: #333;"></div>
-        <!-- Cuadrícula principal -->
-        <canvas id="grid-canvas" style="position: absolute; left: 40px; top: 0; right: 0; height: 100%;"></canvas>
-        <!-- Timeline horizontal -->
-        <div id="timeline" style="position: absolute; left: 40px; top: 0; height: 30px; background: #444;"></div>
-      </div>
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2025 MozAIrt · Música clásica con inteligencia artificial</p>
+  </footer>
 
-      <!-- Controles estilo FL Studio -->
-      <div class="row mt-3">
-        <div class="col-md-3">
-          <select id="snap-selector" class="form-select">
-            <option value="1/4">Snap 1/4</option>
-            <option value="1/8">Snap 1/8</option>
-            <option value="1/16">Snap 1/16</option>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <button class="btn btn-primary" onclick="togglePlayback()">▶/❚❚ Reproducir</button>
-        </div>
-        <div class="col-md-3">
-          <button class="btn btn-success" onclick="exportMIDI()">.Exportar MIDI</button>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <!-- Scripts existentes + nuevas funcionalidades -->
-  <script src="https://cdn.jsdelivr.net/npm/tone@14.8.49/build/Tone.js"></script>
-  <script>
-    /*******************************
-     * Piano Roll Estilo FL Studio
-     *******************************/
-    const pianoRoll = {
-      notes: [],
-      snap: 1/4,
-      zoom: 1,
-      isPlaying: false,
-      activeTool: 'draw',
-      init() {
-        this.canvas = document.getElementById('grid-canvas');
-        this.ctx = this.canvas.getContext('2d');
-        this.drawGrid();
-        this.setupKeyboard();
-        this.setupEventListeners();
-        this.setupTimeline();
-      },
-      drawGrid() {
-        // Implementación de cuadrícula con divisiones de tiempo
-        // Basado en FL Studio's grid system [[2]]
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.strokeStyle = '#555';
-        const beats = 16;
-        const beatWidth = this.canvas.width / beats * this.zoom;
-        
-        for(let i = 0; i <= beats; i++) {
-          this.ctx.beginPath();
-          this.ctx.moveTo(i * beatWidth, 0);
-          this.ctx.lineTo(i * beatWidth, this.canvas.height);
-          this.ctx.stroke();
-        }
-      },
-      setupKeyboard() {
-        // Teclado vertical con 7 octavas (C2-C6) [[1]][[5]]
-        const keys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-        const keyboard = document.getElementById('piano-keys');
-        
-        for(let octave = 2; octave <= 6; octave++) {
-          keys.forEach((key, index) => {
-            const keyDiv = document.createElement('div');
-            keyDiv.className = `piano-key ${key.includes('#') ? 'black-key' : 'white-key'}`;
-            keyDiv.style.height = `${60/this.zoom}px`;
-            keyDiv.textContent = `${key}${octave}`;
-            keyboard.appendChild(keyDiv);
-          });
-        }
-      },
-      setupEventListeners() {
-        // Eventos de interacción con el grid [[7]]
-        this.canvas.addEventListener('mousedown', (e) => {
-          if(this.activeTool === 'draw') this.addNote(e);
-          if(this.activeTool === 'select') this.selectNotes(e);
-        });
-      },
-      addNote(e) {
-        // Lógica de creación de notas con snap [[6]]
-        const rect = this.canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const beat = Math.floor(x / (this.canvas.width / 16 * this.snap)) * this.snap;
-        const note = 60 + Math.floor(y / (this.canvas.height / 60)); // C3 = 60
-        
-        this.notes.push({
-          pitch: note,
-          start: beat,
-          duration: 1,
-          velocity: 0.8
-        });
-        
-        this.drawNotes();
-      },
-      drawNotes() {
-        // Visualización de notas con diferentes colores [[7]]
-        this.notes.forEach(note => {
-          this.ctx.fillStyle = note.velocity > 0.7 ? '#ffb347' : '#888';
-          this.ctx.fillRect(
-            note.start * (this.canvas.width / 16),
-            (note.pitch - 60) * (this.canvas.height / 60),
-            note.duration * (this.canvas.width / 16),
-            this.canvas.height / 60
-          );
-        });
-      },
-      exportMIDI() {
-        // Convertir notas a formato MIDI usando Magenta.js [[2]]
-        const sequence = {
-          notes: this.notes.map(note => ({
-            pitch: note.pitch,
-            startTime: note.start,
-            endTime: note.start + note.duration,
-            velocity: note.velocity
-          }))
-        };
-        
-        const midi = mm.sequenceProtoToMidi(sequence);
-        const blob = new Blob([midi], { type: 'audio/midi' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'piano_roll.mid';
-        link.click();
-      }
-    };
-
-    // Inicializar al cargar
-    document.addEventListener('DOMContentLoaded', () => pianoRoll.init());
-  </script>
+  <!-- Bootstrap JS (solo lo necesario para el navbar móvil) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
