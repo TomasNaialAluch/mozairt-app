@@ -6,8 +6,6 @@
   <title>Piano Roll Completo - MozAIrt</title>
   <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- NexusUI CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nexusui@2.0.8/dist/NexusUI.css">
   <style>
     :root {
       --black-olive: #3f3f37;
@@ -31,6 +29,7 @@
       overflow-y: auto;
       padding: 1rem;
       margin-bottom: 8rem;
+      text-align: center;
     }
     footer {
       background-color: var(--black-olive);
@@ -41,32 +40,17 @@
       bottom: 0;
       width: 100%;
     }
-    /* Barra de herramientas personalizada */
-    #toolbar {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-    #toolbar button {
-      margin: 0 5px;
-      padding: 8px 16px;
+    .btn-volver {
+      margin-top: 20px;
+      padding: 10px 20px;
       background-color: var(--black-olive);
       color: #fff;
       border: none;
       border-radius: 4px;
       cursor: pointer;
     }
-    #toolbar button:hover {
+    .btn-volver:hover {
       background-color: #555;
-    }
-    #nexus-controls {
-      display: inline-block;
-      margin-left: 20px;
-      vertical-align: middle;
-    }
-    /* Opcional: bordes para el contenedor del piano roll */
-    #piano-roll-container {
-      border: 1px solid #ccc;
-      margin-bottom: 20px;
     }
   </style>
 </head>
@@ -80,97 +64,21 @@
 
   <!-- Contenedor principal -->
   <div class="content-container" id="content-container">
-    <!-- Título -->
-    <header class="text-center">
+    <header>
       <h1>Piano Roll Completo</h1>
     </header>
-
-    <!-- Barra de herramientas con controles -->
-    <div id="toolbar">
-      <!-- Botón para guardar y volver a la página de personalización -->
-      <button id="save-and-return" class="btn btn-primary">Guardar y Volver</button>
-      <!-- Contenedor para el control NexusUI (Dial de Zoom) -->
-      <div id="nexus-controls"></div>
-      <!-- Botones para cambiar la resolución de la cuadrícula -->
-      <button onclick="fullPianoRoll.setGridDivision(1)">Grid 1/1</button>
-      <button onclick="fullPianoRoll.setGridDivision(4)">Grid 1/4</button>
-      <button onclick="fullPianoRoll.setGridDivision(16)">Grid 1/16</button>
-      <button onclick="fullPianoRoll.setGridDivision(32)">Grid 1/32</button>
-      <!-- Botón para alternar el modo de agregar nota -->
-      <button onclick="fullPianoRoll.toggleNoteMode()">Toggle Add Note Mode</button>
+    <!-- Mensaje de "Próximamente" -->
+    <div>
+      <h2>Próximamente</h2>
+      <p>Estamos trabajando para integrar nuevas funcionalidades. ¡Vuelve pronto para ver las novedades!</p>
+      <!-- Botón "Volver atrás" -->
+      <button class="btn-volver" onclick="window.history.back()">Volver atrás</button>
     </div>
-
-    <!-- Contenedor para el Piano Roll -->
-    <section class="container">
-      <div id="piano-roll-container"></div>
-    </section>
   </div>
 
   <!-- Footer -->
   <footer>
     <p>&copy; 2025 MozAIrt · Música clásica con inteligencia artificial</p>
   </footer>
-
-  <!-- Dependencias -->
-  <script type="module">
-    import PianoRoll from './PianoRoll.js'; // Asegúrate de que la ruta sea correcta
-  
-    document.addEventListener('DOMContentLoaded', () => {
-      // Recuperar el MIDI guardado en localStorage
-      const midiDataString = localStorage.getItem('midiData');
-      if (!midiDataString) {
-        alert("No se encontró un archivo MIDI guardado.");
-        return;
-      }
-      const midiData = JSON.parse(midiDataString);
-  
-      // Inicializar el piano roll completo y asignarlo al objeto global
-      const fullPianoRoll = new PianoRoll('piano-roll-container', {
-        width: 1000,
-        height: 400,
-        noteColor: '#ffb347',
-        backgroundColor: '#2e2e2e',
-        gridColor: '#555',
-        octaves: 5,
-        startOctave: 2,
-        keyAreaWidth: 40,
-        timelineHeight: 20,
-        zoom: 1,
-        offsetX: 0,
-        gridDivision: 16
-      });
-      window.fullPianoRoll = fullPianoRoll; // Esto hace que esté disponible globalmente
-  
-      // Cargar las notas del MIDI
-      fullPianoRoll.clear();
-      if (midiData.notes && Array.isArray(midiData.notes)) {
-        midiData.notes.forEach(note => {
-          fullPianoRoll.addNote(note.note, note.time, note.duration, note.velocity);
-        });
-      } else {
-        alert("El formato del MIDI guardado no es válido.");
-      }
-  
-      // Configurar el botón "Guardar y Volver"
-      document.getElementById('save-and-return').addEventListener('click', () => {
-        const updatedMidi = fullPianoRoll.exportMIDI();
-        localStorage.setItem('midiData', JSON.stringify(updatedMidi));
-        window.location.href = 'personalizacion-midi.html';
-      });
-      
-      // Crear un Dial de NexusUI para controlar el zoom
-      const zoomDial = new Nexus.Dial('#nexus-controls', {
-        size: [75, 75],
-        interaction: 'vertical',
-        min: 0.5,
-        max: 4,
-        value: fullPianoRoll.options.zoom
-      });
-      zoomDial.on('change', (v) => {
-        fullPianoRoll.setZoomLevel(v);
-      });
-    });
-  </script>
-  
 </body>
 </html>
