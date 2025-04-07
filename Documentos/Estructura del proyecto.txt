@@ -1,0 +1,3 @@
+📂 MozAIrt (frontend actual - conectado con GitHub y Vercel)
+📂 mozairt-backend (Python actual - Render + Cloudinary)
+📂 mozairt-backend-node (nuevo backend en Node.js - OpenAI API)

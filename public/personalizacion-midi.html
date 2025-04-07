@@ -373,55 +373,37 @@
       contentContainer.scrollTop = contentContainer.scrollHeight;
     }
 
-    function sendMessage() {
-      const userText = userInput.value.trim();
-      if (!userText) return;
-      addMessage(userText, "user");
-      userInput.value = "";
+    async function sendMessage() {
+  const userText = userInput.value.trim();
+  if (!userText) return;
 
-      // Respuesta simulada
-      setTimeout(() => {
-        let response = "Entiendo... ¿Qué más necesitas?";
-        if (userText.toLowerCase().includes("opciones")) {
-          response = `Aquí tienes algunas opciones para personalizar tu archivo MIDI:<br><br>
-            <strong>Bajos y Ritmos:</strong><br>
-            <button class="btn btn-outline-primary">Bajo (Bassline)</button>
-            <button class="btn btn-outline-primary">Percusión</button><br><br>
-            <strong>Armonías:</strong><br>
-            <button class="btn btn-outline-primary">Acordes (Chords)</button>
-            <button class="btn btn-outline-primary">Arpegios</button><br><br>
-            <strong>Melodías y Texturas:</strong><br>
-            <button class="btn btn-outline-primary">Leads</button>
-            <button class="btn btn-outline-primary">Pads</button>
-            <button class="btn btn-outline-primary">Stabs</button><br><br>
-            <strong>Sintetizadores:</strong><br>
-            <button class="btn btn-outline-primary">Synths</button>`;
-        }
-        addMessage(response, "mozart");
-      }, 500);
-    }
+  addMessage(userText, "user");
+  userInput.value = "";
 
-    function initEventListeners() {
-      // Enviar mensaje con Enter
-      userInput.addEventListener("keypress", function (event) {
-        if (event.key === "Enter") {
-          event.preventDefault();
-          sendMessage();
-        }
-      });
+  // Mostrar mensaje de carga
+  const loadingMsg = document.createElement("div");
+  loadingMsg.classList.add("message");
+  loadingMsg.innerHTML = `<em>MozAIrt está pensando...</em>`;
+  contentContainer.appendChild(loadingMsg);
+  contentContainer.scrollTop = contentContainer.scrollHeight;
 
-      // Listeners para botones de elementos musicales
-      document.querySelectorAll('.btn-outline-primary').forEach(button => {
-        button.addEventListener('click', function() {
-          document.querySelectorAll('.btn-outline-primary').forEach(btn => btn.classList.remove('active'));
-          this.classList.add('active');
-          if (this.id) {
-            selectedElement.type = this.id.replace('-btn', '');
-            addMessage(`Has seleccionado: <strong>${selectedElement.type}</strong>. Ahora puedes generar tu MIDI personalizado.`, "mozart");
-          }
-        });
-      });
-    }
+  try {
+    const res = await fetch("http://localhost:5000/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: userText })
+    });
+
+    const data = await res.json();
+    loadingMsg.remove();
+    addMessage(data.suggestions || "MozAIrt no devolvió sugerencias.", "mozart");
+  } catch (err) {
+    loadingMsg.remove();
+    console.error("Error en el chat:", err);
+    addMessage("⚠️ No se pudo conectar con el servidor de IA.", "mozart");
+  }
+}
+
 
     /**********************************************************
      * 4) Funciones para procesamiento de MIDI
