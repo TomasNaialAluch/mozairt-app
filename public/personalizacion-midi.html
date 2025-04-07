@@ -402,6 +402,26 @@
     console.error("Error en el chat:", err);
     addMessage("⚠️ No se pudo conectar con el servidor de IA.", "mozart");
   }
+}function initEventListeners() {
+  // Enviar mensaje con Enter
+  userInput.addEventListener("keypress", function (event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      sendMessage();
+    }
+  });
+
+  // Listeners para botones de elementos musicales
+  document.querySelectorAll('.btn-outline-primary').forEach(button => {
+    button.addEventListener('click', function() {
+      document.querySelectorAll('.btn-outline-primary').forEach(btn => btn.classList.remove('active'));
+      this.classList.add('active');
+      if (this.id) {
+        selectedElement.type = this.id.replace('-btn', '');
+        addMessage(`Has seleccionado: <strong>${selectedElement.type}</strong>. Ahora puedes generar tu MIDI personalizado.`, "mozart");
+      }
+    });
+  });
 }
 
 
