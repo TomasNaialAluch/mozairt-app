@@ -387,6 +387,17 @@
   contentContainer.scrollTop = contentContainer.scrollHeight;
 
   try {
+    // Primero verifica si el backend está disponible
+    const healthCheck = await fetch("https://mozairt-backend-node.onrender.com/health", {
+      method: "GET",
+      mode: "cors"
+    });
+
+    if (!healthCheck.ok) {
+      throw new Error("El servidor backend no está disponible");
+    }
+
+    // Luego hace la solicitud principal
     const res = await fetch("https://mozairt-backend-node.onrender.com/analyze", {
       method: "POST",
       headers: { 
@@ -399,7 +410,8 @@
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || `Error del servidor (${res.status})`);
     }
 
     const data = await res.json();
@@ -409,17 +421,29 @@
     loadingMsg.remove();
     console.error("Error en el chat:", err);
     
-    // Mensaje más descriptivo para el usuario
-    let errorMsg = "⚠️ No se pudo conectar con el servidor de IA. ";
+    let errorMsg = "⚠️ Error al conectar con el servidor: ";
     if (err.message.includes("Failed to fetch")) {
-      errorMsg += "Problema de conexión con el servidor.";
-    } else if (err.message.includes("HTTP error")) {
-      errorMsg += "El servidor respondió con un error.";
+      errorMsg += "No se pudo establecer conexión. Verifica tu conexión a internet.";
+    } else if (err.message.includes("backend no está disponible")) {
+      errorMsg += "El servidor está temporalmente fuera de línea. Intenta nuevamente más tarde.";
     } else {
-      errorMsg += "Error desconocido.";
+      errorMsg += err.message;
     }
     
     addMessage(errorMsg, "mozart");
+    
+    // Intento alternativo (opcional)
+    try {
+      const fallbackRes = await fetch("https://mozairt-backend-node.onrender.com/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: userText }),
+        mode: "no-cors" // Modo sin CORS como último recurso
+      });
+      // Procesar respuesta opaca...
+    } catch (fallbackErr) {
+      console.error("Error en fallback:", fallbackErr);
+    }
   }
 }
 function initEventListeners() {
