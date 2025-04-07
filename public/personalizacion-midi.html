@@ -192,7 +192,16 @@
           <button class="btn btn-outline-primary mt-3" onclick="handleMidiUpload()">Cargar archivo MIDI</button>
         </div>
       </div>
-      
+      <div id="piano-roll-toolbar" style="text-align:center; margin-bottom:10px;">
+        <button onclick="pianoRoll.setZoomLevel(1)">Zoom 1x</button>
+        <button onclick="pianoRoll.setZoomLevel(2)">Zoom 2x</button>
+        <button onclick="pianoRoll.setZoomLevel(4)">Zoom 4x</button>
+        <button onclick="pianoRoll.setGridDivision(1)">Grid 1/1</button>
+        <button onclick="pianoRoll.setGridDivision(4)">Grid 1/4</button>
+        <button onclick="pianoRoll.setGridDivision(16)">Grid 1/16</button>
+        <button onclick="pianoRoll.setGridDivision(32)">Grid 1/32</button>
+        <button onclick="pianoRoll.toggleNoteMode()">Toggle Add Note Mode</button>
+      </div>
       <!-- Piano Roll Container -->
       <div id="piano-visualizer" style="display: none;">
         <div class="message">

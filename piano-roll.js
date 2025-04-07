@@ -13,13 +13,17 @@ class PianoRoll {
         keyAreaWidth: 40,            // Área para teclas laterales
         timelineHeight: 20,          // Altura para la zona de línea de tiempo
         zoom: 1,                     // Factor de zoom inicial
-        offsetX: 0                   // Desplazamiento horizontal (scroll)
+        offsetX: 0,                  // Desplazamiento horizontal (scroll)
+        gridDivision: 16             // Resolución de la cuadrícula (subdivisiones por compás)
       };
       this.options = { ...this.defaultOptions, ...options };
   
-      // Propiedades para suavizado (smoothing)
+      // Propiedades para suavizado
       this.targetZoom = this.options.zoom;
       this.targetOffsetX = this.options.offsetX;
+  
+      // Modo para agregar notas (si true, al hacer clic se agrega una nota en lugar de iniciar scroll)
+      this.noteMode = false;
   
       // Elemento contenedor
       this.container = document.getElementById(containerId);
@@ -54,7 +58,7 @@ class PianoRoll {
       this.ctx = this.canvas.getContext('2d');
     }
   
-    // Función principal de dibujo que llama a los métodos de cada área
+    // Método principal de dibujo
     draw() {
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       this.drawTimeline();
@@ -69,8 +73,8 @@ class PianoRoll {
       this.ctx.fillStyle = '#333';
       this.ctx.fillRect(keyAreaWidth, 0, width, timelineHeight);
       this.ctx.fillStyle = '#fff';
-      const beatWidth = (width / 16) * zoom;
-      for (let i = 0; i <= 16; i++) {
+      const beatWidth = (width / this.options.gridDivision) * zoom;
+      for (let i = 0; i <= this.options.gridDivision; i++) {
         let x = keyAreaWidth + i * beatWidth - offsetX;
         if (x < keyAreaWidth) continue;
         this.ctx.beginPath();
@@ -105,11 +109,12 @@ class PianoRoll {
   
     // 1 y 4. Dibujar la cuadrícula con líneas marcadas y respetando zoom y scroll
     drawGrid() {
-      const { keyAreaWidth, width, height, notes, octaves, timelineHeight, gridColor, zoom, offsetX } = this.options;
+      const { keyAreaWidth, width, height, notes, octaves, timelineHeight, gridColor, zoom, offsetX, gridDivision } = this.options;
       const noteHeight = height / (notes.length * octaves);
-      const beatWidth = (width / 16) * zoom;
+      const beatWidth = (width / gridDivision) * zoom;
       this.ctx.strokeStyle = gridColor;
       this.ctx.lineWidth = 1;
+      // Líneas horizontales
       for (let i = 0; i <= notes.length * octaves; i++) {
         const y = timelineHeight + i * noteHeight;
         this.ctx.beginPath();
@@ -117,7 +122,8 @@ class PianoRoll {
         this.ctx.lineTo(keyAreaWidth + width, y);
         this.ctx.stroke();
       }
-      for (let i = 0; i <= 16; i++) {
+      // Líneas verticales
+      for (let i = 0; i <= gridDivision; i++) {
         const x = keyAreaWidth + i * beatWidth - offsetX;
         if (x < keyAreaWidth) continue;
         this.ctx.lineWidth = (i % 4 === 0) ? 2 : 1;
@@ -134,15 +140,16 @@ class PianoRoll {
       const noteHeight = this.options.height / (this.options.notes.length * this.options.octaves);
       this.activeNotes.forEach(noteObj => {
         const noteIndex = this.getNoteIndex(noteObj.note);
-        const x = keyAreaWidth + (noteObj.time * (this.options.width / 16) * zoom) - offsetX;
+        const x = keyAreaWidth + (noteObj.time * (this.options.width / this.options.gridDivision) * zoom) - offsetX;
         const y = timelineHeight + noteIndex * noteHeight;
-        const noteWidth = noteObj.duration * (this.options.width / 16) * zoom;
+        const noteWidth = noteObj.duration * (this.options.width / this.options.gridDivision) * zoom;
         const gradient = this.ctx.createLinearGradient(x, y, x + noteWidth, y);
         gradient.addColorStop(0, this.options.noteColor);
         gradient.addColorStop(1, '#fff');
         this.ctx.fillStyle = gradient;
         this.roundRect(x, y, noteWidth, noteHeight, 4);
         this.ctx.fill();
+        // Indicador de velocidad
         const velocityWidth = 4 * noteObj.velocity;
         this.ctx.fillStyle = 'rgba(0,0,0,0.5)';
         this.ctx.fillRect(x, y, velocityWidth, noteHeight);
@@ -185,7 +192,25 @@ class PianoRoll {
       this.draw();
     }
   
-    // Smoothing: interpolación para zoom y scroll
+    // Métodos para la barra de herramientas
+  
+    setZoomLevel(newZoom) {
+      this.targetZoom = newZoom;
+      this.animateProperties();
+    }
+  
+    setGridDivision(newDivision) {
+      this.options.gridDivision = newDivision;
+      this.draw();
+    }
+  
+    toggleNoteMode() {
+      this.noteMode = !this.noteMode;
+      // Opcional: actualizar la apariencia de un botón en la interfaz
+      console.log("Modo agregar nota:", this.noteMode);
+    }
+  
+    // Suavizado para zoom y scroll
     animateProperties() {
       const lerp = (start, end, t) => start + (end - start) * t;
       const smoothing = 0.1;
@@ -204,7 +229,7 @@ class PianoRoll {
       }
     }
   
-    // 2 y 3. Configurar eventos: zoom, scroll y edición básica (drag & drop) de notas
+    // Configurar eventos: zoom, scroll, agregar o mover notas
     setupEvents() {
       // Zoom con la rueda del ratón (actualiza targetZoom)
       this.canvas.addEventListener('wheel', (e) => {
@@ -218,17 +243,18 @@ class PianoRoll {
         this.animateProperties();
       });
   
-      // Mouse down: detectar clic en nota o iniciar scroll
+      // Mouse down: detectar clic en nota o, si está activo el modo agregar nota, agregarla
       this.canvas.addEventListener('mousedown', (e) => {
         const rect = this.canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
+        // Verificar si se hace clic en una nota (hit detection)
         const hitNote = this.activeNotes.find(noteObj => {
           const noteIndex = this.getNoteIndex(noteObj.note);
           const noteHeight = this.options.height / (this.options.notes.length * this.options.octaves);
-          const noteX = this.options.keyAreaWidth + (noteObj.time * (this.options.width / 16) * this.options.zoom) - this.options.offsetX;
+          const noteX = this.options.keyAreaWidth + (noteObj.time * (this.options.width / this.options.gridDivision) * this.options.zoom) - this.options.offsetX;
           const noteY = this.options.timelineHeight + noteIndex * noteHeight;
-          const noteWidth = noteObj.duration * (this.options.width / 16) * this.options.zoom;
+          const noteWidth = noteObj.duration * (this.options.width / this.options.gridDivision) * this.options.zoom;
           return x >= noteX && x <= noteX + noteWidth && y >= noteY && y <= noteY + noteHeight;
         });
         if (hitNote) {
@@ -236,11 +262,23 @@ class PianoRoll {
           this.isDragging = true;
           const noteIndex = this.getNoteIndex(hitNote.note);
           const noteHeight = this.options.height / (this.options.notes.length * this.options.octaves);
-          const noteX = this.options.keyAreaWidth + (hitNote.time * (this.options.width / 16) * this.options.zoom) - this.options.offsetX;
+          const noteX = this.options.keyAreaWidth + (hitNote.time * (this.options.width / this.options.gridDivision) * this.options.zoom) - this.options.offsetX;
           const noteY = this.options.timelineHeight + noteIndex * noteHeight;
           this.dragOffset.x = x - noteX;
           this.dragOffset.y = y - noteY;
         } else {
+          // Si está en modo agregar nota y fuera del área de teclas, agregar una nota
+          if (this.noteMode && x > this.options.keyAreaWidth) {
+            const adjustedX = x - this.options.keyAreaWidth + this.options.offsetX;
+            const beatWidth = (this.options.width / this.options.gridDivision) * this.options.zoom;
+            const beat = Math.floor(adjustedX / beatWidth);
+            const noteHeight = this.options.height / (this.options.notes.length * this.options.octaves);
+            const noteIndex = Math.floor((y - this.options.timelineHeight) / noteHeight);
+            const note = this.getNoteFromIndex(noteIndex);
+            this.addNote(note, beat, 1);
+            return;
+          }
+          // Si no, iniciar scroll
           if (x > this.options.keyAreaWidth) {
             this.isScrolling = true;
             this.scrollStart.x = x;
@@ -250,13 +288,13 @@ class PianoRoll {
         }
       });
   
-      // Mouse move: actualizar posición de la nota o del scroll (usando targetOffsetX para suavizado)
+      // Mouse move: actualizar posición de la nota o scroll
       this.canvas.addEventListener('mousemove', (e) => {
         const rect = this.canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         if (this.isDragging && this.selectedNote) {
           const newX = x - this.dragOffset.x + this.options.offsetX - this.options.keyAreaWidth;
-          const beatWidth = (this.options.width / 16) * this.options.zoom;
+          const beatWidth = (this.options.width / this.options.gridDivision) * this.options.zoom;
           const newTime = newX / beatWidth;
           this.selectedNote.time = Math.max(0, newTime);
           this.draw();
@@ -280,7 +318,7 @@ class PianoRoll {
       });
     }
   
-    // Exportar otras funciones (play, stop, getNotes, exportMIDI, noteToMidiNumber) sin cambios
+    // Funciones de reproducción, detención, exportación, etc.
     play() {
       if (this.activeNotes.length === 0) {
         console.warn('No hay notas para reproducir');
