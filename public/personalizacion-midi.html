@@ -376,7 +376,7 @@
     async function sendMessage() {
   const userText = userInput.value.trim();
   if (!userText) return;
-
+  console.log("Datos enviados al backend:", { prompt: userText });
   addMessage(userText, "user");
   userInput.value = "";
 
