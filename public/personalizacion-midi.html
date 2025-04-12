@@ -416,7 +416,7 @@
 
     const data = await res.json();
     loadingMsg.remove();
-    addMessage(data.suggestions || "MozAIrt no devolvió sugerencias.", "mozart");
+    addMessage(data || "MozAIrt no devolvió sugerencias.", "mozart");
   } catch (err) {
     loadingMsg.remove();
     console.error("Error en el chat:", err);
